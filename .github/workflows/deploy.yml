@@ -1,0 +1,38 @@
+name: Deploy production
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to jasper
+        env:
+          SSH_KEY: ${{ secrets.JASPER_SSH_KEY }}
+          HOST: enrico@jasper.nalipa.me
+          DEST: /home/enrico/docker/geeft
+        run: |
+          set -euo pipefail
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H jasper.nalipa.me >> ~/.ssh/known_hosts
+          rsync -az --delete \
+            --exclude '.git/' \
+            --exclude 'node_modules/' \
+            --exclude 'build/' \
+            --exclude '.svelte-kit/' \
+            --exclude '.grok/' \
+            --exclude '.env' \
+            --exclude 'data/' \
+            ./ "$HOST:$DEST/"
+          ssh -o BatchMode=yes "$HOST" "bash $DEST/scripts/remote-up.sh"
