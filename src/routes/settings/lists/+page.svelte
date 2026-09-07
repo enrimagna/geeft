@@ -41,7 +41,7 @@
 		<article class="rounded-[1.5rem] border border-white/80 bg-white/80 p-4">
 			<h2 class="font-display text-xl">{list.name}</h2>
 
-			{#if data.families.length > 0}
+			{#if data.families.length > 1}
 				<p class="mt-3 text-xs font-bold tracking-wide text-slate uppercase">
 					{t(data.locale, 'lists.share')}
 				</p>
@@ -56,13 +56,20 @@
 								name="familyId"
 								value={fam.id}
 								checked={list.shares.some((s) => s.id === fam.id)}
+								onchange={(event) => {
+									const formEl = event.currentTarget.form;
+									if (!formEl) return;
+									const checked = formEl.querySelectorAll('input[name="familyId"]:checked');
+									if (checked.length === 0) {
+										event.currentTarget.checked = true;
+										return;
+									}
+									formEl.requestSubmit();
+								}}
 							/>
 							{fam.name}
 						</label>
 					{/each}
-					<button class="pressable btn rounded-2xl btn-primary btn-sm"
-						>{t(data.locale, 'action.save')}</button
-					>
 				</form>
 			{/if}
 
@@ -91,17 +98,21 @@
 				{/each}
 			</ul>
 			{#if candidates.length > 0}
-				<form method="POST" action="?/addAdmin" use:enhance class="mt-3 flex gap-2">
+				<form method="POST" action="?/addAdmin" use:enhance class="mt-3">
 					<input type="hidden" name="listId" value={list.id} />
-					<select class="select flex-1 rounded-2xl select-sm" name="userId" required>
+					<select
+						class="select w-full rounded-2xl select-sm"
+						name="userId"
+						required
+						onchange={(event) => {
+							if (event.currentTarget.value) event.currentTarget.form?.requestSubmit();
+						}}
+					>
 						<option value="">{t(data.locale, 'lists.addAdmin')}</option>
 						{#each candidates as member (member.id)}
 							<option value={member.id}>{member.firstName}</option>
 						{/each}
 					</select>
-					<button class="pressable btn rounded-2xl btn-primary btn-sm"
-						>{t(data.locale, 'action.save')}</button
-					>
 				</form>
 			{/if}
 			<form method="POST" action="?/delete" use:enhance class="mt-3">
