@@ -22,6 +22,9 @@ const handleAnonymousLocale: Handle = async ({ event, resolve }) => {
 };
 
 const handleBetterAuth: Handle = async ({ event, resolve }) => {
+	if (event.url.pathname.startsWith('/api/auth/sign-up')) {
+		return json({ message: 'Signup disabled' }, { status: 403 });
+	}
 	const session = await auth.api.getSession({ headers: event.request.headers });
 	if (session) {
 		event.locals.session = session.session;
@@ -57,7 +60,10 @@ const handleGuards: Handle = async ({ event, resolve }) => {
 			throw redirect(302, '/login');
 		}
 	}
-	if (authed && (path === '/login' || path === '/signup' || path === '/forgot-password')) {
+	if (path === '/signup' || path.startsWith('/signup/')) {
+		throw redirect(302, '/login');
+	}
+	if (authed && (path === '/login' || path === '/forgot-password')) {
 		throw redirect(302, '/receive');
 	}
 	return resolve(event);

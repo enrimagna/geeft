@@ -47,10 +47,6 @@
 		class="pressable mt-4 text-center text-sm font-semibold text-slate underline"
 		href={resolve('/forgot-password')}>{t(data.locale, 'auth.forgot')}</a
 	>
-	<a
-		class="pressable mt-4 text-center text-sm font-semibold text-slate underline"
-		href={resolve('/signup')}>{t(data.locale, 'auth.noAccount')}</a
-	>
 	<form method="POST" action="?/locale" use:enhance class="mt-10">
 		<p class="mb-2 text-center text-xs font-semibold text-slate">
 			{t(data.locale, 'settings.language')}
