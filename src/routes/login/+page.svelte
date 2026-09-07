@@ -42,7 +42,11 @@
 		</button>
 	</form>
 	<a
-		class="pressable mt-6 text-center text-sm font-semibold text-slate underline"
+		class="pressable mt-4 text-center text-sm font-semibold text-slate underline"
+		href={resolve('/forgot-password')}>{t(data.locale, 'auth.forgot')}</a
+	>
+	<a
+		class="pressable mt-4 text-center text-sm font-semibold text-slate underline"
 		href={resolve('/signup')}>{t(data.locale, 'auth.noAccount')}</a
 	>
 </main>

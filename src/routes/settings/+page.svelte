@@ -21,6 +21,53 @@
 	</form>
 </section>
 
+<section class="mt-8 px-4">
+	<h2 class="font-display text-lg font-semibold">{t(data.locale, 'settings.password')}</h2>
+	<p class="mt-1 text-xs text-slate">{t(data.locale, 'settings.password.hint')}</p>
+	<form method="POST" action="?/password" use:enhance class="mt-3 space-y-3">
+		<label class="block text-sm font-semibold">
+			{t(data.locale, 'auth.password.current')}
+			<input
+				class="input mt-1 w-full rounded-2xl"
+				type="password"
+				name="currentPassword"
+				required
+				minlength="8"
+				autocomplete="current-password"
+			/>
+		</label>
+		<label class="block text-sm font-semibold">
+			{t(data.locale, 'auth.password.new')}
+			<input
+				class="input mt-1 w-full rounded-2xl"
+				type="password"
+				name="newPassword"
+				required
+				minlength="8"
+				autocomplete="new-password"
+			/>
+		</label>
+		<label class="block text-sm font-semibold">
+			{t(data.locale, 'auth.password.confirm')}
+			<input
+				class="input mt-1 w-full rounded-2xl"
+				type="password"
+				name="confirm"
+				required
+				minlength="8"
+				autocomplete="new-password"
+			/>
+		</label>
+		{#if form && 'passwordChanged' in form && form.passwordChanged}
+			<p class="text-sm text-success">{t(data.locale, 'auth.password.changed')}</p>
+		{/if}
+		<button
+			class="pressable btn h-11 w-full rounded-2xl text-sm font-bold btn-primary"
+			type="submit">{t(data.locale, 'action.save')}</button
+		>
+	</form>
+</section>
+
 <section class="mt-8 space-y-3 px-4">
 	<a
 		href={resolve('/settings/lists')}

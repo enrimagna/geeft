@@ -39,7 +39,7 @@ Per bambini, chi non ha un account, o liste comuni. Si creano in Impostazioni. `
 - Asset originali in `brand/` (logo, mark, `small.png`, `android.png`).
 - Drizzle ORM + `better-sqlite3`.
 - SQLite `data/geeft.sqlite` (directory `data/` non versionata); `PRAGMA journal_mode=WAL` e `PRAGMA foreign_keys=ON` per ogni connessione.
-- Better Auth email/password, sessioni via cookie httpOnly (Secure in produzione, SameSite appropriato). **Niente reset password via email in v1** (nessun SMTP; in locale si reimposta sul sqlite).
+- Better Auth email/password, sessioni via cookie httpOnly (Secure in produzione, SameSite appropriato). Reset e cambio password via email transazionale **SMTP2GO** (`SMTP2GO_API_KEY`, mittente `MAIL_FROM`). Senza API key le mail non partono (utile in locale).
 - i18n: `it` default, `fr`, `en`.
 - `vite-plugin-pwa` per manifest/service worker/icone. Installabilità sì; **non** mettere in cache HTML autenticato.
 - TDM: un processo Node, un file SQLite, nessun GraphQL o servizio esterno necessario.
@@ -283,7 +283,7 @@ Una lista personale per ciascun utente in Pétisné, `name = first_name`, `is_pe
 - [ ] SvelteKit 2 TypeScript PWA con Tailwind/DaisyUI tema custom Slate/Peach (non `fantasy`) e asset originali in `brand/`.
 - [ ] Nessuna copy o iconografia natalizia.
 - [ ] SQLite è `data/geeft.sqlite`, usa WAL e `foreign_keys=ON`; schema/migrations Drizzle riproducibili; `data/` non in git.
-- [ ] Better Auth email/password con cookie httpOnly; senza sessione 401; niente reset password via email.
+- [ ] Better Auth email/password con cookie httpOnly; senza sessione 401; reset/cambio password via SMTP2GO.
 - [ ] Signup invite-only: senza codice valido non si entra; crea membership, lista personale unica per famiglia, imposta `current_family_id`.
 - [ ] Più famiglie: join, create (caller owner), switch corrente; ogni query è scoped alla famiglia corrente.
 - [ ] `it` default e `fr`/`en` per UI ed errori critici; catalogo §9 esatto.
@@ -315,3 +315,4 @@ Una lista personale per ciascun utente in Pétisné, `name = first_name`, `is_pe
 8. **UI chrome**: Famiglia e lingua in Impostazioni (icona profilo); bottom nav solo Ricevi/Regala.
 9. **Pétisné**: otto adulti seed; liste gestite per bambini/liste comuni, con più admin (seed: Alba, Enrico+Lucile).
 10. **Liste tra famiglie**: i regali personali sono gli stessi in ogni famiglia; le liste gestite si pubblicano famiglia per famiglia. Receive non mostra il nome della famiglia.
+11. **Email**: SMTP2GO per reset password, conferma cambio password e altre transazionali. Signup resta invite-only, senza verifica email obbligatoria.

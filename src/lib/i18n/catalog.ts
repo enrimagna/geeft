@@ -91,6 +91,57 @@ const catalog = {
 	'auth.signup': { it: 'Crea account', fr: 'Créer un compte', en: 'Create account' },
 	'auth.email': { it: 'Email', fr: 'E-mail', en: 'Email' },
 	'auth.password': { it: 'Password', fr: 'Mot de passe', en: 'Password' },
+	'auth.password.current': {
+		it: 'Password attuale',
+		fr: 'Mot de passe actuel',
+		en: 'Current password'
+	},
+	'auth.password.new': { it: 'Nuova password', fr: 'Nouveau mot de passe', en: 'New password' },
+	'auth.password.confirm': {
+		it: 'Conferma password',
+		fr: 'Confirmer le mot de passe',
+		en: 'Confirm password'
+	},
+	'auth.password.mismatch': {
+		it: 'Le password non coincidono.',
+		fr: 'Les mots de passe ne correspondent pas.',
+		en: 'The passwords do not match.'
+	},
+	'auth.password.changed': {
+		it: 'Password aggiornata.',
+		fr: 'Mot de passe mis à jour.',
+		en: 'Password updated.'
+	},
+	'auth.forgot': {
+		it: 'Password dimenticata?',
+		fr: 'Mot de passe oublié ?',
+		en: 'Forgot your password?'
+	},
+	'auth.forgot.submit': {
+		it: 'Invia il link',
+		fr: 'Envoyer le lien',
+		en: 'Send the link'
+	},
+	'auth.forgot.sent': {
+		it: 'Se l’email è nel sistema, riceverai un link tra poco.',
+		fr: 'Si l’e-mail est connue, vous recevrez un lien sous peu.',
+		en: 'If that email is in the system, a link is on its way.'
+	},
+	'auth.reset': {
+		it: 'Nuova password',
+		fr: 'Nouveau mot de passe',
+		en: 'New password'
+	},
+	'auth.reset.submit': {
+		it: 'Salva la password',
+		fr: 'Enregistrer le mot de passe',
+		en: 'Save password'
+	},
+	'auth.reset.invalid': {
+		it: 'Link non valido o scaduto. Richiedine uno nuovo.',
+		fr: 'Lien invalide ou expiré. Demandez-en un nouveau.',
+		en: 'This link is invalid or expired. Request a new one.'
+	},
 	'auth.firstName': { it: 'Nome', fr: 'Prénom', en: 'First name' },
 	'auth.lastName': { it: 'Cognome (opzionale)', fr: 'Nom (optionnel)', en: 'Last name (optional)' },
 	'auth.invite': { it: 'Codice invito', fr: "Code d'invitation", en: 'Invite code' },
@@ -143,6 +194,12 @@ const catalog = {
 	'family.regenerate': { it: 'Nuovo codice', fr: 'Nouveau code', en: 'New code' },
 	'family.owner': { it: 'Titolare', fr: 'Responsable', en: 'Owner' },
 	'settings.language': { it: 'Lingua', fr: 'Langue', en: 'Language' },
+	'settings.password': { it: 'Password', fr: 'Mot de passe', en: 'Password' },
+	'settings.password.hint': {
+		it: 'Almeno 8 caratteri. Le altre sessioni verranno chiuse.',
+		fr: 'Au moins 8 caractères. Les autres sessions seront fermées.',
+		en: 'At least 8 characters. Other sessions will be signed out.'
+	},
 	'settings.profile': { it: 'Profilo', fr: 'Profil', en: 'Profile' },
 	'settings.family.hint': {
 		it: 'Famiglie, inviti e switch.',

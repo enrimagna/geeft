@@ -38,7 +38,7 @@ const handleGuards: Handle = async ({ event, resolve }) => {
 			throw redirect(302, '/login');
 		}
 	}
-	if (authed && (path === '/login' || path === '/signup')) {
+	if (authed && (path === '/login' || path === '/signup' || path === '/forgot-password')) {
 		throw redirect(302, '/receive');
 	}
 	return resolve(event);
