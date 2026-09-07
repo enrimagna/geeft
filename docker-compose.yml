@@ -19,7 +19,7 @@ services:
     labels:
       - 'traefik.enable=true'
       - 'traefik.docker.network=proxy-net'
-      - 'traefik.http.routers.geeft.rule=Host(`geeft.nalipa.me`)'
+      - 'traefik.http.routers.geeft.rule=Host(`geeft.app`)'
       - 'traefik.http.routers.geeft.entrypoints=websecure'
       - 'traefik.http.routers.geeft.tls=true'
       - 'traefik.http.routers.geeft.tls.certresolver=letsencrypt'
