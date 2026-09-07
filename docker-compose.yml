@@ -12,6 +12,8 @@ services:
       PROTOCOL_HEADER: x-forwarded-proto
       HOST_HEADER: x-forwarded-host
       ADDRESS_HEADER: x-forwarded-for
+      SMTP2GO_API_KEY: ${SMTP2GO_API_KEY}
+      MAIL_FROM: ${MAIL_FROM:-Geeft <noreply@geeft.app>}
     volumes:
       - ./data:/data
     networks:
