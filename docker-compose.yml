@@ -1,0 +1,43 @@
+services:
+  geeft:
+    build: .
+    image: geeft:local
+    container_name: geeft
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      HOST: '0.0.0.0'
+      PORT: '3000'
+      PROTOCOL_HEADER: x-forwarded-proto
+      HOST_HEADER: x-forwarded-host
+      ADDRESS_HEADER: x-forwarded-for
+    volumes:
+      - ./data:/data
+    networks:
+      - proxy-net
+    labels:
+      - 'traefik.enable=true'
+      - 'traefik.docker.network=proxy-net'
+      - 'traefik.http.routers.geeft.rule=Host(`geeft.nalipa.me`)'
+      - 'traefik.http.routers.geeft.entrypoints=websecure'
+      - 'traefik.http.routers.geeft.tls=true'
+      - 'traefik.http.routers.geeft.tls.certresolver=letsencrypt'
+      - 'traefik.http.routers.geeft.middlewares=sec-headers@file'
+      - 'traefik.http.services.geeft.loadbalancer.server.port=3000'
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/login').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 25s
+
+networks:
+  proxy-net:
+    external: true
