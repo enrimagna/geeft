@@ -19,7 +19,7 @@
 			<label class="block text-sm font-semibold">
 				{t(data.locale, 'auth.email')}
 				<input
-					class="input mt-1 w-full rounded-2xl"
+					class="input input-sm mt-1 h-10 w-full rounded-2xl"
 					type="email"
 					name="email"
 					required

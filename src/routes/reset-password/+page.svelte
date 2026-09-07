@@ -22,7 +22,7 @@
 			<label class="block text-sm font-semibold">
 				{t(data.locale, 'auth.password.new')}
 				<input
-					class="input mt-1 w-full rounded-2xl"
+					class="input input-sm mt-1 h-10 w-full rounded-2xl"
 					type="password"
 					name="password"
 					required
@@ -33,7 +33,7 @@
 			<label class="block text-sm font-semibold">
 				{t(data.locale, 'auth.password.confirm')}
 				<input
-					class="input mt-1 w-full rounded-2xl"
+					class="input input-sm mt-1 h-10 w-full rounded-2xl"
 					type="password"
 					name="confirm"
 					required

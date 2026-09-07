@@ -15,20 +15,20 @@
 	<form method="POST" class="mt-8 space-y-3">
 		<label class="block text-sm font-semibold"
 			>{t(data.locale, 'auth.firstName')}<input
-				class="input mt-1 w-full rounded-2xl"
+				class="input input-sm mt-1 h-10 w-full rounded-2xl"
 				name="firstName"
 				required
 			/></label
 		>
 		<label class="block text-sm font-semibold"
 			>{t(data.locale, 'auth.lastName')}<input
-				class="input mt-1 w-full rounded-2xl"
+				class="input input-sm mt-1 h-10 w-full rounded-2xl"
 				name="lastName"
 			/></label
 		>
 		<label class="block text-sm font-semibold"
 			>{t(data.locale, 'auth.email')}<input
-				class="input mt-1 w-full rounded-2xl"
+				class="input input-sm mt-1 h-10 w-full rounded-2xl"
 				type="email"
 				name="email"
 				required
@@ -36,7 +36,7 @@
 		>
 		<label class="block text-sm font-semibold"
 			>{t(data.locale, 'auth.password')}<input
-				class="input mt-1 w-full rounded-2xl"
+				class="input input-sm mt-1 h-10 w-full rounded-2xl"
 				type="password"
 				name="password"
 				required
@@ -45,7 +45,7 @@
 		>
 		<label class="block text-sm font-semibold"
 			>{t(data.locale, 'auth.invite')}<input
-				class="input mt-1 w-full rounded-2xl"
+				class="input input-sm mt-1 h-10 w-full rounded-2xl"
 				name="invite"
 				required
 			/></label
