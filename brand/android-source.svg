@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Geeft">
+  <rect width="1024" height="1024" rx="220" fill="#5C6B7A"/>
+  <rect x="196" y="320" width="632" height="520" rx="96" fill="#FAF7F2"/>
+  <rect x="196" y="320" width="632" height="128" rx="72" fill="#EDE8E1"/>
+  <rect x="196" y="392" width="632" height="56" fill="#EDE8E1"/>
+  <rect x="470" y="320" width="84" height="520" fill="#E8A87C"/>
+  <rect x="196" y="540" width="632" height="84" fill="#E8A87C"/>
+  <path d="M360 220 C360 100, 470 100, 512 220 C554 100, 664 100, 664 220" fill="none" stroke="#E8A87C" stroke-width="56" stroke-linecap="round"/>
+  <circle cx="512" cy="236" r="42" fill="#FAF7F2"/>
+</svg>

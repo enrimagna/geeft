@@ -1,8 +1,12 @@
 # Come usare questo pack
 
+## 0. Famiglia seed
+
+Pétisné: Lucile, Enrico, Caroline, Hélène, Thomas, Isabelle, Christian, Jérémy. Lista gestita **Alba** (admin Enrico e Lucile). Impostazioni → Liste gestite per crearne altre e invitare admin della stessa famiglia.
+
 ## 1. Asset del brand
 
-File originali da copiare in brand: logo.svg, logo.png, small.png, android.png.
+Pack v2 in `brand/`: `logo.svg` / `logo.png`, `mark.svg` / `mark.png`, `small.png`, `android.png`, `android-source.svg`, `palette.svg` / `palette.png`, più `IDENTITY.md` e `PALETTE.md`. Tema UI = token Slate/Peach, niente Natale.
 
 ## 2. Build
 
@@ -18,14 +22,14 @@ Verifica viewport 390px, target touch 44px, bottom navigation, italiano/francese
 
 ## 5. Test privacy in 5 passi
 
-1. Lucile in Receive vede solo le proprie idee e nessun reserver, commento o regalo segreto.
-2. Enrico in Give prenota un’idea di Lucile e aggiunge commento e regalo segreto.
-3. Lucile non vede identità, commento o sorpresa; la sorpresa non è nel payload.
-4. Caroline in Give vede solo lo stato consentito; in Receive non vede mai il reserver; unreserve chiede conferma.
-5. Delete di idea prenotata, anche via API, risponde 409 con messaggio localizzato.
+1. Lucile in Receive vede solo le proprie idee e nessun reserver, badge, commento o regalo segreto. Le card libere e quelle prenotate sono identiche.
+2. Enrico in Give prenota un’idea di Lucile e aggiunge commento e regalo segreto (il secret non è prenotato in automatico).
+3. Lucile non vede identità, commento o sorpresa; la sorpresa non è nel payload; un delete dell’idea prenotata risponde 409 senza nomi.
+4. Caroline in Give vede solo lo stato anonimo (`Qualcuno ha prenotato questo regalo`), mai il nome di Enrico; in Receive non vede mai il reserver; unreserve chiede conferma.
+5. Delete e modifica titolo/URL di idea prenotata, anche via API, rispondono 409 con messaggio localizzato. Una idea già ricevuta non è prenotabile.
 
 ## Comandi post-build
 
 Dalla root dell’app esegui il package manager con gli script `install`, `check`, `lint`, `test`, `build` e `preview` definiti in package.json. Poi crea data/ e avvia lo script di seed se presente.
 
-Per sviluppo usa lo script dev e apri l’URL locale in viewport mobile 390px. Gli account seed sono in SPEC.md; in ambiente reale cambia subito le password.
+Per sviluppo usa lo script dev e apri l’URL locale in viewport mobile 390px. Gli account seed e l’invite `familia-dev-invite` sono in SPEC.md; in ambiente reale cambia subito le password e rigenera l’invite.

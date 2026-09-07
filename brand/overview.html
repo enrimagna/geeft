@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="it">
+	<head>
+		<meta charset="utf-8" />
+		<title>Geeft brand pack</title>
+		<style>
+			:root {
+				--slate: #5c6b7a;
+				--peach: #e8a87c;
+				--mist: #ede8e1;
+				--ink: #1c1917;
+				--paper: #faf7f2;
+			}
+			body {
+				margin: 0;
+				font-family:
+					system-ui,
+					-apple-system,
+					Segoe UI,
+					Roboto,
+					sans-serif;
+				background: var(--paper);
+				color: var(--ink);
+			}
+			main {
+				max-width: 880px;
+				margin: 0 auto;
+				padding: 48px 24px 80px;
+			}
+			h1 {
+				font-size: 40px;
+				letter-spacing: -0.04em;
+				margin: 0 0 8px;
+			}
+			.sub {
+				color: #78716c;
+				margin-bottom: 40px;
+			}
+			.swatches {
+				display: grid;
+				grid-template-columns: repeat(5, 1fr);
+				gap: 12px;
+				margin: 24px 0 48px;
+			}
+			.swatch {
+				border-radius: 16px;
+				overflow: hidden;
+				border: 1px solid #e7e5e4;
+				background: #fff;
+			}
+			.swatch .chip {
+				height: 88px;
+			}
+			.swatch .meta {
+				padding: 10px 12px;
+				font-size: 13px;
+			}
+			.swatch code {
+				color: #78716c;
+			}
+			.row {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 24px;
+				align-items: center;
+				margin: 32px 0;
+			}
+			.card {
+				background: #fff;
+				border: 1px solid #e7e5e4;
+				border-radius: 20px;
+				padding: 24px;
+				text-align: center;
+			}
+			img {
+				max-width: 100%;
+				height: auto;
+			}
+			table {
+				width: 100%;
+				border-collapse: collapse;
+				font-size: 14px;
+			}
+			th,
+			td {
+				text-align: left;
+				padding: 10px 8px;
+				border-bottom: 1px solid #e7e5e4;
+			}
+			th {
+				color: #78716c;
+				font-weight: 600;
+			}
+		</style>
+	</head>
+	<body>
+		<main>
+			<h1>Geeft</h1>
+			<p class="sub">Brand pack v2 — Slate + Peach · pacco geometrico · niente Natale</p>
+
+			<h2>Palette</h2>
+			<div class="swatches">
+				<div class="swatch">
+					<div class="chip" style="background: #5c6b7a"></div>
+					<div class="meta"><strong>Slate</strong><br /><code>#5C6B7A</code></div>
+				</div>
+				<div class="swatch">
+					<div class="chip" style="background: #e8a87c"></div>
+					<div class="meta"><strong>Peach</strong><br /><code>#E8A87C</code></div>
+				</div>
+				<div class="swatch">
+					<div class="chip" style="background: #ede8e1"></div>
+					<div class="meta"><strong>Mist</strong><br /><code>#EDE8E1</code></div>
+				</div>
+				<div class="swatch">
+					<div class="chip" style="background: #1c1917"></div>
+					<div class="meta"><strong>Ink</strong><br /><code>#1C1917</code></div>
+				</div>
+				<div class="swatch">
+					<div class="chip" style="background: #faf7f2; border-bottom: 1px solid #e7e5e4"></div>
+					<div class="meta"><strong>Paper</strong><br /><code>#FAF7F2</code></div>
+				</div>
+			</div>
+
+			<h2>Grafiche</h2>
+			<div class="row">
+				<div class="card">
+					<img src="mark.png" alt="Mark Geeft" />
+					<p>Mark</p>
+				</div>
+				<div class="card">
+					<img src="android.png" alt="Icona app Geeft" />
+					<p>Icona PWA / Android</p>
+				</div>
+			</div>
+			<div class="card">
+				<img src="logo.png" alt="Logo Geeft" />
+				<p>Logo (mark + wordmark)</p>
+			</div>
+
+			<h2 style="margin-top: 48px">Token</h2>
+			<table>
+				<tr>
+					<th>Token</th>
+					<th>Hex</th>
+					<th>Uso</th>
+				</tr>
+				<tr>
+					<td>Slate</td>
+					<td>#5C6B7A</td>
+					<td>pacco / primario</td>
+				</tr>
+				<tr>
+					<td>Peach</td>
+					<td>#E8A87C</td>
+					<td>nastro / accento</td>
+				</tr>
+				<tr>
+					<td>Mist</td>
+					<td>#EDE8E1</td>
+					<td>superfici</td>
+				</tr>
+				<tr>
+					<td>Ink</td>
+					<td>#1C1917</td>
+					<td>testo</td>
+				</tr>
+				<tr>
+					<td>Paper</td>
+					<td>#FAF7F2</td>
+					<td>fondi</td>
+				</tr>
+			</table>
+		</main>
+	</body>
+</html>
