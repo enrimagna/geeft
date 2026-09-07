@@ -1,6 +1,7 @@
 import type { RequestEvent } from '@sveltejs/kit';
 import { redirect } from '@sveltejs/kit';
 import { and, eq } from 'drizzle-orm';
+import { db } from '$lib/server/db';
 import type { Db } from '$lib/server/db/sqlite';
 import { family, familyMember, giftList, user } from '$lib/server/db/schema';
 import { AppError } from '$lib/server/errors';
@@ -24,13 +25,14 @@ export function asAppUser(raw: RequestEvent['locals']['user']): AppUser | null {
 		locale?: string;
 		currentFamilyId?: string | null;
 	};
+	const stored = db.select({ locale: user.locale }).from(user).where(eq(user.id, raw.id)).get();
 	return {
 		id: raw.id,
 		email: raw.email,
 		name: raw.name,
 		firstName: extra.firstName ?? raw.name,
 		lastName: extra.lastName ?? null,
-		locale: coerceLocale(extra.locale),
+		locale: coerceLocale(stored?.locale ?? extra.locale),
 		currentFamilyId: extra.currentFamilyId ?? null
 	};
 }

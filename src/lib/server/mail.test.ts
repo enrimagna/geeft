@@ -22,6 +22,16 @@ describe('mail templates', () => {
 		});
 		expect(mail.subject).toBe('La password di Geeft è cambiata');
 	});
+
+	it('uses French copy when the profile is French', () => {
+		const mail = passwordResetMail({
+			email: 'caro@geeft.app',
+			locale: 'fr',
+			url: 'https://geeft.app/reset-password?token=x'
+		});
+		expect(mail.subject).toBe('Réinitialisez votre mot de passe Geeft');
+		expect(mail.text).toContain('réinitialiser');
+	});
 });
 
 describe('sendMail', () => {

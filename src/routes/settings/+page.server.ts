@@ -6,6 +6,7 @@ import { requirePageUser } from '$lib/server/session';
 import { coerceLocale, t } from '$lib/i18n/catalog';
 import { writeLocaleCookie } from '$lib/i18n/cookie';
 import { passwordChangedMail, queueMail } from '$lib/server/mail';
+import { storedLocaleForId } from '$lib/server/locale';
 import { APIError } from 'better-auth/api';
 import { eq } from 'drizzle-orm';
 import { fail, redirect } from '@sveltejs/kit';
@@ -69,7 +70,12 @@ export const actions: Actions = {
 				}
 				throw error;
 			}
-			queueMail(passwordChangedMail(mailUser(current)));
+			queueMail(
+				passwordChangedMail({
+					...mailUser(current),
+					locale: storedLocaleForId(current.id)
+				})
+			);
 			return { passwordChanged: true as const };
 		} catch (error) {
 			return actionFail(error);

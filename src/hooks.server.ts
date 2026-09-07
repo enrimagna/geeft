@@ -6,17 +6,20 @@ import type { Handle } from '@sveltejs/kit';
 import { getTextDirection } from '$lib/paraglide/runtime';
 import { paraglideMiddleware } from '$lib/paraglide/server';
 import { json, redirect } from '@sveltejs/kit';
+import { coerceLocale } from '$lib/i18n/catalog';
+import { LOCALE_COOKIE, writeLocaleCookie } from '$lib/i18n/cookie';
+import { localeFromAcceptLanguage } from '$lib/i18n/prefer';
+import { asAppUser } from '$lib/server/session';
 
-const handleParaglide: Handle = ({ event, resolve }) =>
-	paraglideMiddleware(event.request, ({ request, locale }) => {
-		event.request = request;
-		return resolve(event, {
-			transformPageChunk: ({ html }) =>
-				html
-					.replace('%paraglide.lang%', locale)
-					.replace('%paraglide.dir%', getTextDirection(locale))
-		});
-	});
+const handleAnonymousLocale: Handle = async ({ event, resolve }) => {
+	if (!event.cookies.get(LOCALE_COOKIE)) {
+		writeLocaleCookie(
+			event.cookies,
+			localeFromAcceptLanguage(event.request.headers.get('accept-language'))
+		);
+	}
+	return resolve(event);
+};
 
 const handleBetterAuth: Handle = async ({ event, resolve }) => {
 	const session = await auth.api.getSession({ headers: event.request.headers });
@@ -26,6 +29,22 @@ const handleBetterAuth: Handle = async ({ event, resolve }) => {
 	}
 	return svelteKitHandler({ event, resolve, auth, building });
 };
+
+const handleUserLocale: Handle = async ({ event, resolve }) => {
+	const current = asAppUser(event.locals.user);
+	if (current) writeLocaleCookie(event.cookies, current.locale);
+	return resolve(event);
+};
+
+const handleParaglide: Handle = ({ event, resolve }) =>
+	paraglideMiddleware(event.request, ({ request, locale }) => {
+		event.request = request;
+		const lang = coerceLocale(event.cookies.get(LOCALE_COOKIE) ?? locale);
+		return resolve(event, {
+			transformPageChunk: ({ html }) =>
+				html.replace('%paraglide.lang%', lang).replace('%paraglide.dir%', getTextDirection(lang))
+		});
+	});
 
 const protectedPrefixes = ['/receive', '/give', '/family', '/settings'];
 
@@ -44,4 +63,10 @@ const handleGuards: Handle = async ({ event, resolve }) => {
 	return resolve(event);
 };
 
-export const handle: Handle = sequence(handleParaglide, handleBetterAuth, handleGuards);
+export const handle: Handle = sequence(
+	handleAnonymousLocale,
+	handleBetterAuth,
+	handleUserLocale,
+	handleParaglide,
+	handleGuards
+);

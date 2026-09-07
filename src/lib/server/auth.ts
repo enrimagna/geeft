@@ -5,6 +5,7 @@ import { sveltekitCookies } from 'better-auth/svelte-kit';
 import { getRequestEvent } from '$app/server';
 import { db } from '$lib/server/db';
 import { passwordChangedMail, passwordResetMail, queueMail } from '$lib/server/mail';
+import { storedLocaleForEmail } from '$lib/server/locale';
 
 type MailUser = {
 	email: string;
@@ -52,7 +53,7 @@ export const auth = betterAuth({
 				passwordResetMail({
 					email: mailUser.email,
 					name: displayName(mailUser),
-					locale: mailUser.locale,
+					locale: storedLocaleForEmail(mailUser.email),
 					url: resetUrl(token)
 				})
 			);
@@ -63,7 +64,7 @@ export const auth = betterAuth({
 				passwordChangedMail({
 					email: mailUser.email,
 					name: displayName(mailUser),
-					locale: mailUser.locale
+					locale: storedLocaleForEmail(mailUser.email)
 				})
 			);
 		}
