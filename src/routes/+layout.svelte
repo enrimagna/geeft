@@ -4,7 +4,7 @@
 	import BottomNav from '$lib/components/BottomNav.svelte';
 	import ProfileButton from '$lib/components/ProfileButton.svelte';
 	import { page } from '$app/state';
-	import { fly } from 'svelte/transition';
+	import { fade } from 'svelte/transition';
 	import type { LayoutProps } from './$types';
 
 	let { data, children }: LayoutProps = $props();
@@ -27,16 +27,18 @@
 
 <LivingBackground />
 
+{#if signedIn && data.user}
+	<ProfileButton name={data.user.firstName} locale={data.locale} active={inSettings} />
+{/if}
+
 <div class="geeft-shell relative z-10">
-	{#if signedIn && data.user}
-		<ProfileButton name={data.user.firstName} locale={data.locale} active={inSettings} />
-	{/if}
 	{#key path}
-		<div in:fly={{ y: 18, duration: 380 }} class="min-h-dvh pb-28">
+		<div in:fade={{ duration: 160 }} class="min-h-dvh pb-28">
 			{@render children()}
 		</div>
 	{/key}
-	{#if signedIn}
-		<BottomNav locale={data.locale} current={nav} />
-	{/if}
 </div>
+
+{#if signedIn}
+	<BottomNav locale={data.locale} current={nav} />
+{/if}

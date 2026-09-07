@@ -17,7 +17,7 @@
 
 <a
 	href={resolve('/settings')}
-	class="pressable absolute top-3 right-3 z-20 flex h-11 w-11 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-content shadow-lg
+	class="pressable fixed top-3 right-4 z-30 flex h-11 w-11 items-center justify-center rounded-full bg-primary text-sm font-bold text-primary-content shadow-lg
 		{active ? 'ring-2 ring-peach ring-offset-2 ring-offset-paper' : ''}"
 	aria-label={t(locale, 'app.settings')}
 	title={t(locale, 'app.settings')}

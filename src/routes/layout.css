@@ -62,7 +62,6 @@ body {
 	margin: 0 auto;
 	min-height: 100dvh;
 	max-width: 430px;
-	overflow: clip;
 }
 
 .living-bg {

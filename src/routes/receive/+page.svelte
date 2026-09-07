@@ -50,7 +50,7 @@
 </section>
 
 <button
-	class="fab-box pressable btn fixed right-5 bottom-24 z-20 h-16 w-16 rounded-3xl text-3xl shadow-xl btn-secondary"
+	class="fab-box pressable btn fixed right-4 bottom-24 z-20 h-16 w-16 rounded-3xl text-3xl shadow-xl btn-secondary"
 	onclick={() => (composer = true)}
 	aria-label={t(data.locale, 'gift.add')}>+</button
 >
