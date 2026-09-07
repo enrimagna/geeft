@@ -15,7 +15,7 @@
 	{#if form && 'sent' in form && form.sent}
 		<p class="mt-10 text-center text-sm text-slate">{t(data.locale, 'auth.forgot.sent')}</p>
 	{:else}
-		<form method="POST" class="mt-10 space-y-4">
+		<form method="POST" action="?/request" class="mt-10 space-y-4">
 			<label class="block text-sm font-semibold">
 				{t(data.locale, 'auth.email')}
 				<input

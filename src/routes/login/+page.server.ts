@@ -9,7 +9,7 @@ export const load: PageServerLoad = async () => ({});
 
 export const actions: Actions = {
 	locale: async (event) => setLocaleFromForm(event),
-	default: async (event) => {
+	login: async (event) => {
 		const locale = readLocaleCookie(event.cookies);
 		const form = await event.request.formData();
 		const email = form.get('email')?.toString() ?? '';

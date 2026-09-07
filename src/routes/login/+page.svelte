@@ -12,7 +12,7 @@
 	<img src="/brand/logo.svg" alt="Geeft" class="mx-auto h-16 w-auto" />
 	<p class="mt-3 text-center text-sm text-slate">{t(data.locale, 'app.tagline')}</p>
 
-	<form method="POST" class="mt-10 space-y-4">
+	<form method="POST" action="?/login" class="mt-10 space-y-4">
 		<label class="block text-sm font-semibold">
 			{t(data.locale, 'auth.email')}
 			<input
