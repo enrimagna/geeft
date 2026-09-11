@@ -8,7 +8,7 @@
 	import GiftCard from '$lib/components/GiftCard.svelte';
 	import BottomSheet from '$lib/components/BottomSheet.svelte';
 	import { t } from '$lib/i18n/catalog';
-		import type { ActionData, PageProps } from './$types';
+	import type { ActionData, PageProps } from './$types';
 
 	let { data, form }: PageProps & { form: ActionData } = $props();
 	const gifts = $derived(data.gifts);
@@ -104,33 +104,56 @@
 		{#if form?.message}
 			<p class="mt-3 text-sm text-error">{form.message}</p>
 		{/if}
-		<div class="mt-6 grid grid-cols-2 gap-3">
-			<button
-				type="button"
-				class="pressable btn w-full rounded-2xl btn-ghost col-span-2"
-				onclick={closeSheet}>{t(data.locale, 'action.cancel')}</button
-			>
+		<div class="mt-6 flex flex-col gap-3">
 			{#if open.receivedAt}
 				<button
-					class="pressable btn w-full rounded-2xl btn-primary"
+					class="pressable btn h-12 w-full rounded-2xl btn-primary"
 					type="button"
 					onclick={() => (confirmUnreceive = open.id)}
 					>{t(data.locale, 'gift.unmarkReceived')}</button
 				>
 			{:else}
-				<form method="POST" action="?/received" use:enhance>
+				<form
+					method="POST"
+					action="?/received"
+					use:enhance={() => {
+						return async ({ result, update }) => {
+							await update();
+							if (result.type !== 'success') return;
+						};
+					}}
+				>
 					<input type="hidden" name="giftId" value={open.id} />
-					<button class="pressable btn w-full rounded-2xl btn-primary"
+					<button type="submit" class="pressable btn h-12 w-full rounded-2xl btn-primary"
 						>{t(data.locale, 'gift.markReceived')}</button
 					>
 				</form>
 			{/if}
-			<form method="POST" action="?/delete" use:enhance>
+			<form
+				method="POST"
+				action="?/delete"
+				use:enhance={() => {
+					const id = open.id;
+					return async ({ result, update }) => {
+						if (result.type === 'success') {
+							closeSheet();
+							await update();
+							return;
+						}
+						await update();
+					};
+				}}
+			>
 				<input type="hidden" name="giftId" value={open.id} />
-				<button class="pressable btn w-full rounded-2xl btn-ghost"
+				<button type="submit" class="pressable btn h-12 w-full rounded-2xl btn-ghost"
 					>{t(data.locale, 'gift.delete')}</button
 				>
 			</form>
+			<button
+				type="button"
+				class="pressable btn h-12 w-full rounded-2xl btn-ghost"
+				onclick={closeSheet}>{t(data.locale, 'action.cancel')}</button
+			>
 		</div>
 	{/if}
 	</BottomSheet>

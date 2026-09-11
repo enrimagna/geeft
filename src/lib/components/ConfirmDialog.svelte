@@ -24,8 +24,9 @@
 </script>
 
 {#if open}
-	<div class="fixed inset-0 z-[60] flex items-end justify-center p-4 sm:items-center">
+	<div class="fixed inset-0 z-[100] flex items-end justify-center p-4 sm:items-center">
 		<button
+			type="button"
 			class="absolute inset-0 bg-ink/35 backdrop-blur-[2px]"
 			onclick={oncancel}
 			transition:fade={{ duration: 180 }}

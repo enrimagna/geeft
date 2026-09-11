@@ -140,6 +140,7 @@
 		<div class="mt-5 space-y-2">
 			{#if open.reservation === 'none' && !open.receivedAt}
 				<button
+					type="button"
 					class="pressable btn h-12 w-full rounded-2xl font-bold btn-secondary"
 					onclick={() => (confirm = { type: 'reserve', id: open.id })}
 					>{t(data.locale, 'action.reserve')}</button
@@ -147,15 +148,25 @@
 			{/if}
 			{#if open.reservation === 'mine' && !open.receivedAt}
 				<button
+					type="button"
 					class="pressable btn h-12 w-full rounded-2xl btn-ghost"
 					onclick={() => (confirm = { type: 'unreserve', id: open.id })}
 					>{t(data.locale, 'action.unreserve')}</button
 				>
 			{/if}
 			{#if open.hiddenFromRecipient && open.createdByMe}
-				<form method="POST" action="?/deliver" use:enhance>
+				<form
+					method="POST"
+					action="?/deliver"
+					use:enhance={() => {
+						return async ({ result, update }) => {
+							await update();
+							if (result.type === 'success') closeGift();
+						};
+					}}
+				>
 					<input type="hidden" name="giftId" value={open.id} />
-					<button class="pressable btn w-full rounded-2xl btn-primary"
+					<button type="submit" class="pressable btn h-12 w-full rounded-2xl btn-primary"
 						>{t(data.locale, 'gift.deliver')}</button
 					>
 				</form>
@@ -172,7 +183,7 @@
 					}}
 				>
 					<input type="hidden" name="giftId" value={open.id} />
-					<button class="pressable btn w-full rounded-2xl btn-ghost"
+					<button type="submit" class="pressable btn h-12 w-full rounded-2xl btn-ghost"
 						>{t(data.locale, 'gift.withdraw')}</button
 					>
 				</form>
@@ -190,7 +201,7 @@
 						{#if comment.mine}
 							<form method="POST" action="?/deleteComment" use:enhance class="mt-1">
 								<input type="hidden" name="commentId" value={comment.id} />
-								<button class="text-xs font-semibold text-slate underline"
+								<button type="submit" class="text-xs font-semibold text-slate underline"
 									>{t(data.locale, 'comment.delete')}</button
 								>
 							</form>
@@ -205,7 +216,7 @@
 					name="body"
 					placeholder={t(data.locale, 'comment.placeholder')}
 				/>
-				<button class="pressable btn rounded-2xl btn-secondary"
+				<button type="submit" class="pressable btn rounded-2xl btn-secondary"
 					>{t(data.locale, 'action.save')}</button
 				>
 			</form>
@@ -234,7 +245,9 @@
 		applyReservation(id, type === 'reserve' ? 'mine' : 'none');
 		const fd = new FormData();
 		fd.set('giftId', id);
-		fetch(`?/${type}`, { method: 'POST', body: fd, credentials: 'include' });
+		fetch(`?/${type}`, { method: 'POST', body: fd, credentials: 'include' }).catch(() => {
+			applyReservation(id, type === 'reserve' ? 'none' : 'mine');
+		});
 	}}
 />
 
