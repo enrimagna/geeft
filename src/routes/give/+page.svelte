@@ -6,6 +6,7 @@
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import GiftCard from '$lib/components/GiftCard.svelte';
+	import { chrome } from '$lib/chrome.svelte';
 	import { t } from '$lib/i18n/catalog';
 	import type { GiveGift } from '$lib/server/visibility';
 	import { fade, fly } from 'svelte/transition';
@@ -26,6 +27,11 @@
 	function applyReservation(id: string, reservation: GiveGift['reservation']) {
 		gifts = gifts.map((g) => (g.id === id ? { ...g, reservation } : g));
 	}
+
+	$effect(() => {
+		if (!open) return;
+		return chrome.acquire();
+	});
 
 	function openGift(id: string) {
 		openId = id;
@@ -81,7 +87,7 @@
 {/if}
 
 {#if open}
-	<div class="fixed inset-0 z-40 flex items-end">
+	<div class="fixed inset-0 z-50 flex items-end">
 		<button
 			class="absolute inset-0 bg-ink/35"
 			onclick={() => (openId = null)}

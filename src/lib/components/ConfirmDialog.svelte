@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { t, type Locale } from '$lib/i18n/catalog';
+	import { chrome } from '$lib/chrome.svelte';
 	import { fade, scale } from 'svelte/transition';
 
 	let {
@@ -15,10 +16,15 @@
 		oncancel: () => void;
 		onconfirm: () => void;
 	} = $props();
+
+	$effect(() => {
+		if (!open) return;
+		return chrome.acquire();
+	});
 </script>
 
 {#if open}
-	<div class="fixed inset-0 z-50 flex items-end justify-center p-4 sm:items-center">
+	<div class="fixed inset-0 z-[60] flex items-end justify-center p-4 sm:items-center">
 		<button
 			class="absolute inset-0 bg-ink/35 backdrop-blur-[2px]"
 			onclick={oncancel}

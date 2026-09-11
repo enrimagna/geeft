@@ -6,7 +6,7 @@
 </script>
 
 <nav
-	class="fixed bottom-3 left-1/2 z-30 w-[min(100%-1.5rem,400px)] -translate-x-1/2 rounded-[1.6rem] border border-white/70 bg-paper/80 p-1 shadow-[0_18px_50px_-20px_rgba(28,25,23,0.45)] backdrop-blur-xl"
+	class="fixed bottom-3 left-1/2 z-20 w-[min(100%-1.5rem,400px)] -translate-x-1/2 rounded-[1.6rem] border border-white/70 bg-paper/80 p-1 shadow-[0_18px_50px_-20px_rgba(28,25,23,0.45)] backdrop-blur-xl"
 >
 	<div class="relative grid grid-cols-2">
 		{#if current}

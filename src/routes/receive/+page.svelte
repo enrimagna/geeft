@@ -6,6 +6,7 @@
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import GiftCard from '$lib/components/GiftCard.svelte';
+	import { chrome } from '$lib/chrome.svelte';
 	import { t } from '$lib/i18n/catalog';
 	import { fade, fly } from 'svelte/transition';
 	import type { ActionData, PageProps } from './$types';
@@ -16,6 +17,11 @@
 	let openId = $state<string | null>(null);
 	let confirmUnreceive = $state<string | null>(null);
 	const open = $derived(gifts.find((g) => g.id === openId) ?? null);
+
+	$effect(() => {
+		if (!open) return;
+		return chrome.acquire();
+	});
 </script>
 
 <header class="px-5 pt-16 pr-16">
@@ -67,7 +73,7 @@
 />
 
 {#if open}
-	<div class="fixed inset-0 z-40 flex items-end">
+	<div class="fixed inset-0 z-50 flex items-end">
 		<button
 			class="absolute inset-0 bg-ink/35"
 			onclick={() => (openId = null)}

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { t, type Locale } from '$lib/i18n/catalog';
+	import { chrome } from '$lib/chrome.svelte';
 	import { fly } from 'svelte/transition';
 
 	let {
@@ -18,10 +19,15 @@
 		hidden?: Record<string, string>;
 		onclose: () => void;
 	} = $props();
+
+	$effect(() => {
+		if (!open) return;
+		return chrome.acquire();
+	});
 </script>
 
 {#if open}
-	<div class="fixed inset-0 z-40">
+	<div class="fixed inset-0 z-50">
 		<button
 			class="absolute inset-0 bg-ink/30"
 			onclick={onclose}

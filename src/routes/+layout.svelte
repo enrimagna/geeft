@@ -3,6 +3,7 @@
 	import LivingBackground from '$lib/components/LivingBackground.svelte';
 	import BottomNav from '$lib/components/BottomNav.svelte';
 	import ProfileButton from '$lib/components/ProfileButton.svelte';
+	import { chrome } from '$lib/chrome.svelte';
 	import { page } from '$app/state';
 	import { fade } from 'svelte/transition';
 	import type { LayoutProps } from './$types';
@@ -19,7 +20,7 @@
 	);
 	const signedIn = $derived(Boolean(data.user));
 	const inSettings = $derived(path.startsWith('/settings'));
-	const showBottomNav = $derived(nav !== null);
+	const showBottomNav = $derived(nav !== null && !chrome.overlayOpen);
 </script>
 
 <svelte:head>
@@ -36,7 +37,7 @@
 	<ProfileButton name={data.user.firstName} locale={data.locale} active={inSettings} />
 {/if}
 
-<div class="geeft-shell relative z-10">
+<div class="geeft-shell relative">
 	{#key path}
 		<div in:fade={{ duration: 160 }} class="min-h-dvh {showBottomNav ? 'pb-28' : 'pb-8'}">
 			{@render children()}
