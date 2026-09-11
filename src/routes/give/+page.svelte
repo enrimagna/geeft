@@ -1,13 +1,10 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { onMount } from 'svelte';
 	import Composer from '$lib/components/Composer.svelte';
-	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import GiftCard from '$lib/components/GiftCard.svelte';
-	import BottomSheet from '$lib/components/BottomSheet.svelte';
+	import { chrome } from '$lib/chrome.svelte';
 	import { t } from '$lib/i18n/catalog';
 	import type { GiveGift } from '$lib/server/visibility';
 	import type { ActionData, PageProps } from './$types';
@@ -15,9 +12,8 @@
 	let { data, form }: PageProps & { form: ActionData } = $props();
 	let gifts = $state<GiveGift[]>(data.gifts);
 	let composer = $state(false);
-	let pendingConfirm = $state<{ type: 'reserve' | 'unreserve'; id: string } | null>(null);
-	/** Local sheet state only — never re-derived from URL/load (those lag and desync). */
 	let openId = $state<string | null>(null);
+	let pendingConfirm = $state<{ type: 'reserve' | 'unreserve'; id: string } | null>(null);
 	let closedAt = 0;
 	const open = $derived(openId ? (gifts.find((g) => g.id === openId) ?? null) : null);
 
@@ -25,51 +21,38 @@
 		gifts = data.gifts;
 	});
 
-	/** Deep link once from the landing URL; do not keep syncing afterward. */
-	onMount(() => {
-		const gift = new URL(window.location.href).searchParams.get('gift');
-		if (gift) openId = gift;
+	$effect(() => {
+		if (!openId && !pendingConfirm) return;
+		return chrome.acquire();
 	});
 
 	function applyReservation(id: string, reservation: GiveGift['reservation']) {
 		gifts = gifts.map((g) => (g.id === id ? { ...g, reservation } : g));
 	}
 
-	function listUrl(extra: Record<string, string> = {}) {
-		const params = new URLSearchParams();
-		if (data.selected) params.set('list', data.selected);
-		for (const [k, v] of Object.entries(extra)) params.set(k, v);
-		const q = params.toString();
-		const path = resolve('/give');
-		return q ? `${path}?${q}` : path;
-	}
-
 	function openGift(id: string) {
 		if (Date.now() - closedAt < 500) return;
 		pendingConfirm = null;
 		openId = id;
-		void goto(listUrl({ gift: id }), { replaceState: true, keepFocus: true, noScroll: true });
 	}
 
 	function closeGift() {
 		closedAt = Date.now();
 		pendingConfirm = null;
 		openId = null;
-		const url = new URL(window.location.href);
-		if (url.searchParams.has('gift')) {
-			url.searchParams.delete('gift');
-			history.replaceState(history.state, '', `${url.pathname}${url.search}`);
-		}
 	}
 
-	function askReserve() {
-		if (!open || open.receivedAt) return;
-		pendingConfirm = { type: 'reserve', id: open.id };
-	}
-
-	function askUnreserve() {
-		if (!open || open.receivedAt) return;
-		pendingConfirm = { type: 'unreserve', id: open.id };
+	function confirmPending() {
+		if (!pendingConfirm) return;
+		const id = pendingConfirm.id;
+		const type = pendingConfirm.type;
+		pendingConfirm = null;
+		applyReservation(id, type === 'reserve' ? 'mine' : 'none');
+		const fd = new FormData();
+		fd.set('giftId', id);
+		fetch(`?/${type}`, { method: 'POST', body: fd, credentials: 'include' }).catch(() => {
+			applyReservation(id, type === 'reserve' ? 'none' : 'mine');
+		});
 	}
 </script>
 
@@ -115,151 +98,140 @@
 	/>
 {/if}
 
-<BottomSheet open={openId !== null} onclose={closeGift}>
-	{#if open}
-		<button
-			type="button"
-			class="mx-auto mb-4 block h-1.5 w-16 rounded-full bg-mist"
-			onclick={closeGift}
-			aria-label={t(data.locale, 'action.close')}
-		></button>
-		{#if open.hiddenFromRecipient}
-			<p class="mb-2 text-xs font-bold tracking-widest text-peach uppercase">
-				{t(data.locale, 'gift.secret')}
-			</p>
-		{/if}
-		<h2 class="font-display text-3xl leading-tight">{open.title}</h2>
-		{#if open.description}
-			<p class="mt-3 text-slate">{open.description}</p>
-		{/if}
-		{#if open.url}
+{#if open}
+	<div class="fixed inset-0 z-[80] overflow-y-auto bg-paper">
+		<div class="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col px-5 pb-10 pt-4">
 			<button
 				type="button"
-				class="mt-3 font-semibold text-primary underline"
-				onclick={() => window.open(open.url!, '_blank', 'noopener,noreferrer')}
-				>{t(data.locale, 'gift.openLink')}</button
+				class="mx-auto mb-4 block h-1.5 w-16 rounded-full bg-mist"
+				onclick={closeGift}
+				aria-label={t(data.locale, 'action.close')}
+			></button>
+			{#if open.hiddenFromRecipient}
+				<p class="mb-2 text-xs font-bold tracking-widest text-peach uppercase">
+					{t(data.locale, 'gift.secret')}
+				</p>
+			{/if}
+			<h2 class="font-display text-3xl leading-tight">{open.title}</h2>
+			{#if open.description}
+				<p class="mt-3 text-slate">{open.description}</p>
+			{/if}
+			{#if open.url}
+				<button
+					type="button"
+					class="mt-3 font-semibold text-primary underline"
+					onclick={() => window.open(open.url!, '_blank', 'noopener,noreferrer')}
+					>{t(data.locale, 'gift.openLink')}</button
+				>
+			{/if}
+			{#if open.receivedAt}
+				<p class="mt-3 text-sm font-semibold text-slate">{t(data.locale, 'gift.received')}</p>
+			{/if}
+			{#if form && 'message' in form && form.message && !('ok' in form)}
+				<p class="mt-3 text-sm text-error">{form.message}</p>
+			{/if}
+
+			<div class="mt-5 space-y-2">
+				{#if open.reservation === 'none' && !open.receivedAt}
+					<button
+						type="button"
+						class="pressable btn h-12 w-full rounded-2xl font-bold btn-secondary"
+						onclick={() => (pendingConfirm = { type: 'reserve', id: open.id })}
+						>{t(data.locale, 'action.reserve')}</button
+					>
+				{/if}
+				{#if open.reservation === 'mine' && !open.receivedAt}
+					<button
+						type="button"
+						class="pressable btn h-12 w-full rounded-2xl btn-ghost"
+						onclick={() => (pendingConfirm = { type: 'unreserve', id: open.id })}
+						>{t(data.locale, 'action.unreserve')}</button
+					>
+				{/if}
+				{#if open.hiddenFromRecipient && open.createdByMe}
+					<form
+						method="POST"
+						action="?/deliver"
+						use:enhance={() => {
+							return async ({ result, update }) => {
+								await update();
+								if (result.type === 'success') closeGift();
+							};
+						}}
+					>
+						<input type="hidden" name="giftId" value={open.id} />
+						<button type="submit" class="pressable btn h-12 w-full rounded-2xl btn-primary"
+							>{t(data.locale, 'gift.deliver')}</button
+						>
+					</form>
+					<form
+						method="POST"
+						action="?/withdraw"
+						use:enhance={() => {
+							const id = open.id;
+							return async ({ result }) => {
+								if (result.type !== 'success') return;
+								gifts = gifts.filter((g) => g.id !== id);
+								closeGift();
+							};
+						}}
+					>
+						<input type="hidden" name="giftId" value={open.id} />
+						<button type="submit" class="pressable btn h-12 w-full rounded-2xl btn-ghost"
+							>{t(data.locale, 'gift.withdraw')}</button
+						>
+					</form>
+				{/if}
+			</div>
+
+			<div class="mt-6">
+				<h3 class="text-sm font-bold tracking-wide text-slate uppercase">
+					{t(data.locale, 'comment.add')}
+				</h3>
+				<form method="POST" action="?/comment" use:enhance class="mt-3 flex gap-2">
+					<input type="hidden" name="giftId" value={open.id} />
+					<input
+						class="input flex-1 rounded-2xl input-sm"
+						name="body"
+						placeholder={t(data.locale, 'comment.placeholder')}
+					/>
+					<button type="submit" class="pressable btn rounded-2xl btn-secondary"
+						>{t(data.locale, 'action.save')}</button
+					>
+				</form>
+			</div>
+			<button
+				type="button"
+				class="pressable btn mt-6 h-12 w-full rounded-2xl btn-ghost"
+				onclick={closeGift}>{t(data.locale, 'action.cancel')}</button
 			>
-		{/if}
-		{#if open.receivedAt}
-			<p class="mt-3 text-sm font-semibold text-slate">{t(data.locale, 'gift.received')}</p>
-		{/if}
-		{#if form && 'message' in form && form.message && !('ok' in form)}
-			<p class="mt-3 text-sm text-error">{form.message}</p>
-		{/if}
-
-		<div class="mt-5 space-y-2">
-			{#if open.reservation === 'none' && !open.receivedAt}
-				<button
-					type="button"
-					class="pressable btn h-12 w-full rounded-2xl font-bold btn-secondary"
-					onclick={askReserve}
-					>{t(data.locale, 'action.reserve')}</button
-				>
-			{/if}
-			{#if open.reservation === 'mine' && !open.receivedAt}
-				<button
-					type="button"
-					class="pressable btn h-12 w-full rounded-2xl btn-ghost"
-					onclick={askUnreserve}
-					>{t(data.locale, 'action.unreserve')}</button
-				>
-			{/if}
-			{#if open.hiddenFromRecipient && open.createdByMe}
-				<form
-					method="POST"
-					action="?/deliver"
-					use:enhance={() => {
-						return async ({ result, update }) => {
-							await update();
-							if (result.type === 'success') closeGift();
-						};
-					}}
-				>
-					<input type="hidden" name="giftId" value={open.id} />
-					<button type="submit" class="pressable btn h-12 w-full rounded-2xl btn-primary"
-						>{t(data.locale, 'gift.deliver')}</button
-					>
-				</form>
-				<form
-					method="POST"
-					action="?/withdraw"
-					use:enhance={() => {
-						const id = open.id;
-						return async ({ result }) => {
-							if (result.type !== 'success') return;
-							gifts = gifts.filter((g) => g.id !== id);
-							closeGift();
-						};
-					}}
-				>
-					<input type="hidden" name="giftId" value={open.id} />
-					<button type="submit" class="pressable btn h-12 w-full rounded-2xl btn-ghost"
-						>{t(data.locale, 'gift.withdraw')}</button
-					>
-				</form>
-			{/if}
 		</div>
+	</div>
+{/if}
 
-		<div class="mt-6">
-			<h3 class="text-sm font-bold tracking-wide text-slate uppercase">
-				{t(data.locale, 'comment.add')}
-			</h3>
-			<ul class="mt-2 space-y-2">
-				{#each openId && data.giftId === openId ? data.comments : [] as comment (comment.id)}
-					<li class="rounded-2xl bg-white/80 p-3 text-sm">
-						{comment.body}
-						{#if comment.mine}
-							<form method="POST" action="?/deleteComment" use:enhance class="mt-1">
-								<input type="hidden" name="commentId" value={comment.id} />
-								<button type="submit" class="text-xs font-semibold text-slate underline"
-									>{t(data.locale, 'comment.delete')}</button
-								>
-							</form>
-						{/if}
-					</li>
-				{/each}
-			</ul>
-			<form method="POST" action="?/comment" use:enhance class="mt-3 flex gap-2">
-				<input type="hidden" name="giftId" value={open.id} />
-				<input
-					class="input flex-1 rounded-2xl input-sm"
-					name="body"
-					placeholder={t(data.locale, 'comment.placeholder')}
-				/>
-				<button type="submit" class="pressable btn rounded-2xl btn-secondary"
-					>{t(data.locale, 'action.save')}</button
+{#if pendingConfirm}
+	<div class="fixed inset-0 z-[200] flex items-end justify-center bg-ink/35 p-4 sm:items-center">
+		<div class="w-full max-w-sm rounded-[2rem] bg-paper p-6 shadow-2xl">
+			<p class="text-center font-display text-2xl leading-tight font-semibold">
+				{pendingConfirm.type === 'unreserve'
+					? t(data.locale, 'gift.unreserve.confirm')
+					: t(data.locale, 'gift.reserve.confirm')}
+			</p>
+			<div class="mt-6 grid grid-cols-2 gap-3">
+				<button
+					class="pressable btn rounded-2xl btn-ghost"
+					type="button"
+					onclick={() => (pendingConfirm = null)}>{t(data.locale, 'action.cancel')}</button
 				>
-			</form>
+				<button
+					class="pressable btn rounded-2xl font-bold btn-secondary"
+					type="button"
+					onclick={confirmPending}>{t(data.locale, 'action.confirm')}</button
+				>
+			</div>
 		</div>
-		<button
-			type="button"
-			class="pressable btn mt-6 h-12 w-full rounded-2xl btn-ghost"
-			onclick={closeGift}>{t(data.locale, 'action.cancel')}</button
-		>
-	{/if}
-	</BottomSheet>
-
-
-<ConfirmDialog
-	open={Boolean(pendingConfirm)}
-	locale={data.locale}
-	title={pendingConfirm?.type === 'unreserve'
-		? t(data.locale, 'gift.unreserve.confirm')
-		: t(data.locale, 'gift.reserve.confirm')}
-	oncancel={() => (pendingConfirm = null)}
-	onconfirm={() => {
-		if (!pendingConfirm) return;
-		const id = pendingConfirm.id;
-		const type = pendingConfirm.type;
-		pendingConfirm = null;
-		applyReservation(id, type === 'reserve' ? 'mine' : 'none');
-		const fd = new FormData();
-		fd.set('giftId', id);
-		fetch(`?/${type}`, { method: 'POST', body: fd, credentials: 'include' }).catch(() => {
-			applyReservation(id, type === 'reserve' ? 'none' : 'mine');
-		});
-	}}
-/>
+	</div>
+{/if}
 
 {#if data.selected}
 	<form method="POST" action="?/secret" class="hidden">
