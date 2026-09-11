@@ -120,7 +120,7 @@
 		<button
 			type="button"
 			class="mx-auto mb-4 block h-1.5 w-16 rounded-full bg-mist"
-			onpointerup={closeGift}
+			onclick={closeGift}
 			aria-label={t(data.locale, 'action.close')}
 		></button>
 		{#if open.hiddenFromRecipient}
@@ -152,7 +152,7 @@
 				<button
 					type="button"
 					class="pressable btn h-12 w-full rounded-2xl font-bold btn-secondary"
-					onpointerup={askReserve}
+					onclick={askReserve}
 					>{t(data.locale, 'action.reserve')}</button
 				>
 			{/if}
@@ -160,7 +160,7 @@
 				<button
 					type="button"
 					class="pressable btn h-12 w-full rounded-2xl btn-ghost"
-					onpointerup={askUnreserve}
+					onclick={askUnreserve}
 					>{t(data.locale, 'action.unreserve')}</button
 				>
 			{/if}
@@ -234,7 +234,7 @@
 		<button
 			type="button"
 			class="pressable btn mt-6 h-12 w-full rounded-2xl btn-ghost"
-			onpointerup={closeGift}>{t(data.locale, 'action.cancel')}</button
+			onclick={closeGift}>{t(data.locale, 'action.cancel')}</button
 		>
 	{/if}
 	</BottomSheet>
