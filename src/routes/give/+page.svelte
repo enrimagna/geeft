@@ -44,27 +44,22 @@
 		return q ? `${path}?${q}` : path;
 	}
 
-	/** Best-effort URL sync for comments load — must not own sheet visibility. */
-	function syncUrl(id: string | null) {
-		void goto(id ? listUrl({ gift: id }) : listUrl(), {
-			replaceState: true,
-			keepFocus: true,
-			noScroll: true
-		});
-	}
-
 	function openGift(id: string) {
 		if (Date.now() - closedAt < 500) return;
 		pendingConfirm = null;
 		openId = id;
-		syncUrl(id);
+		void goto(listUrl({ gift: id }), { replaceState: true, keepFocus: true, noScroll: true });
 	}
 
 	function closeGift() {
 		closedAt = Date.now();
 		pendingConfirm = null;
 		openId = null;
-		syncUrl(null);
+		const url = new URL(window.location.href);
+		if (url.searchParams.has('gift')) {
+			url.searchParams.delete('gift');
+			history.replaceState(history.state, '', `${url.pathname}${url.search}`);
+		}
 	}
 
 	function askReserve() {
@@ -120,12 +115,12 @@
 	/>
 {/if}
 
-<BottomSheet open={open !== null} onclose={closeGift}>
+<BottomSheet open={openId !== null} onclose={closeGift}>
 	{#if open}
 		<button
 			type="button"
 			class="mx-auto mb-4 block h-1.5 w-16 rounded-full bg-mist"
-			onclick={closeGift}
+			onpointerup={closeGift}
 			aria-label={t(data.locale, 'action.close')}
 		></button>
 		{#if open.hiddenFromRecipient}
@@ -157,7 +152,7 @@
 				<button
 					type="button"
 					class="pressable btn h-12 w-full rounded-2xl font-bold btn-secondary"
-					onclick={askReserve}
+					onpointerup={askReserve}
 					>{t(data.locale, 'action.reserve')}</button
 				>
 			{/if}
@@ -165,7 +160,7 @@
 				<button
 					type="button"
 					class="pressable btn h-12 w-full rounded-2xl btn-ghost"
-					onclick={askUnreserve}
+					onpointerup={askUnreserve}
 					>{t(data.locale, 'action.unreserve')}</button
 				>
 			{/if}
@@ -239,7 +234,7 @@
 		<button
 			type="button"
 			class="pressable btn mt-6 h-12 w-full rounded-2xl btn-ghost"
-			onclick={closeGift}>{t(data.locale, 'action.cancel')}</button
+			onpointerup={closeGift}>{t(data.locale, 'action.cancel')}</button
 		>
 	{/if}
 	</BottomSheet>

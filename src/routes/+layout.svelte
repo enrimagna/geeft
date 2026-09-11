@@ -5,7 +5,6 @@
 	import ProfileButton from '$lib/components/ProfileButton.svelte';
 	import { chrome } from '$lib/chrome.svelte';
 	import { page } from '$app/state';
-	import { fade } from 'svelte/transition';
 	import type { LayoutProps } from './$types';
 
 	let { data, children }: LayoutProps = $props();
@@ -38,11 +37,9 @@
 {/if}
 
 <div class="geeft-shell relative">
-	{#key path}
-		<div in:fade={{ duration: 160 }} class="min-h-dvh {showBottomNav ? 'pb-28' : 'pb-8'}">
-			{@render children()}
-		</div>
-	{/key}
+	<div class="min-h-dvh {showBottomNav ? 'pb-28' : 'pb-8'}">
+		{@render children()}
+	</div>
 </div>
 
 {#if signedIn && showBottomNav}
