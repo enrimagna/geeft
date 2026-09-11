@@ -4,6 +4,7 @@
 	import Composer from '$lib/components/Composer.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import GiftCard from '$lib/components/GiftCard.svelte';
+	import BottomSheet from '$lib/components/BottomSheet.svelte';
 	import { chrome } from '$lib/chrome.svelte';
 	import { t } from '$lib/i18n/catalog';
 	import type { GiveGift } from '$lib/server/visibility';
@@ -28,7 +29,7 @@
 	});
 
 	$effect(() => {
-		if (!openId && !pendingConfirm) return;
+		if (!pendingConfirm) return;
 		return chrome.acquire();
 	});
 
@@ -115,123 +116,114 @@
 	{/if}
 </div>
 
-{#if open}
-	<div
-		use:portal
-		class="fixed inset-0 overflow-y-auto bg-paper"
-		style="z-index: 200"
-		role="dialog"
-		aria-modal="true"
-		aria-label={open.title}
-	>
-		<div class="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col px-5 pb-10 pt-4">
+<BottomSheet open={open !== null} onclose={closeGift}>
+	{#if open}
+		<button
+			type="button"
+			class="mx-auto mb-3 block h-1.5 w-12 rounded-full bg-mist"
+			use:onTap={closeGift}
+			aria-label={t(data.locale, 'action.close')}
+		></button>
+		{#if open.hiddenFromRecipient}
+			<p class="mb-2 text-xs font-bold tracking-widest text-peach uppercase">
+				{t(data.locale, 'gift.secret')}
+			</p>
+		{/if}
+		<h2 class="font-display text-2xl leading-tight">{open.title}</h2>
+		{#if open.description}
+			<p class="mt-2 text-sm text-slate">{open.description}</p>
+		{/if}
+		{#if open.url}
 			<button
 				type="button"
-				class="mx-auto mb-4 block h-1.5 w-16 rounded-full bg-mist"
-				use:onTap={closeGift}
-				aria-label={t(data.locale, 'action.close')}
-			></button>
-			{#if open.hiddenFromRecipient}
-				<p class="mb-2 text-xs font-bold tracking-widest text-peach uppercase">
-					{t(data.locale, 'gift.secret')}
-				</p>
-			{/if}
-			<h2 class="font-display text-3xl leading-tight">{open.title}</h2>
-			{#if open.description}
-				<p class="mt-3 text-slate">{open.description}</p>
-			{/if}
-			{#if open.url}
+				class="mt-2 text-sm font-semibold text-primary underline"
+				use:onTap={() => window.open(open.url!, '_blank', 'noopener,noreferrer')}
+				>{t(data.locale, 'gift.openLink')}</button
+			>
+		{/if}
+		{#if open.receivedAt}
+			<p class="mt-2 text-sm font-semibold text-slate">{t(data.locale, 'gift.received')}</p>
+		{/if}
+		{#if form && 'message' in form && form.message && !('ok' in form)}
+			<p class="mt-2 text-sm text-error">{form.message}</p>
+		{/if}
+
+		<div class="mt-4 space-y-2">
+			{#if open.reservation === 'none' && !open.receivedAt}
 				<button
 					type="button"
-					class="mt-3 font-semibold text-primary underline"
-					use:onTap={() => window.open(open.url!, '_blank', 'noopener,noreferrer')}
-					>{t(data.locale, 'gift.openLink')}</button
+					class="pressable btn h-11 w-full rounded-2xl font-bold btn-secondary"
+					use:onTap={() => (pendingConfirm = { type: 'reserve', id: open.id })}
+					>{t(data.locale, 'action.reserve')}</button
 				>
 			{/if}
-			{#if open.receivedAt}
-				<p class="mt-3 text-sm font-semibold text-slate">{t(data.locale, 'gift.received')}</p>
+			{#if open.reservation === 'mine' && !open.receivedAt}
+				<button
+					type="button"
+					class="pressable btn h-11 w-full rounded-2xl btn-ghost"
+					use:onTap={() => (pendingConfirm = { type: 'unreserve', id: open.id })}
+					>{t(data.locale, 'action.unreserve')}</button
+				>
 			{/if}
-			{#if form && 'message' in form && form.message && !('ok' in form)}
-				<p class="mt-3 text-sm text-error">{form.message}</p>
-			{/if}
-
-			<div class="mt-5 space-y-2">
-				{#if open.reservation === 'none' && !open.receivedAt}
-					<button
-						type="button"
-						class="pressable btn h-12 w-full rounded-2xl font-bold btn-secondary"
-						use:onTap={() => (pendingConfirm = { type: 'reserve', id: open.id })}
-						>{t(data.locale, 'action.reserve')}</button
-					>
-				{/if}
-				{#if open.reservation === 'mine' && !open.receivedAt}
-					<button
-						type="button"
-						class="pressable btn h-12 w-full rounded-2xl btn-ghost"
-						use:onTap={() => (pendingConfirm = { type: 'unreserve', id: open.id })}
-						>{t(data.locale, 'action.unreserve')}</button
-					>
-				{/if}
-				{#if open.hiddenFromRecipient && open.createdByMe}
-					<form
-						method="POST"
-						action="?/deliver"
-						use:enhance={() => {
-							return async ({ result, update }) => {
-								await update();
-								if (result.type === 'success') closeGift();
-							};
-						}}
-					>
-						<input type="hidden" name="giftId" value={open.id} />
-						<button type="submit" class="pressable btn h-12 w-full rounded-2xl btn-primary"
-							>{t(data.locale, 'gift.deliver')}</button
-						>
-					</form>
-					<form
-						method="POST"
-						action="?/withdraw"
-						use:enhance={() => {
-							const id = open.id;
-							return async ({ result }) => {
-								if (result.type !== 'success') return;
-								gifts = gifts.filter((g) => g.id !== id);
-								closeGift();
-							};
-						}}
-					>
-						<input type="hidden" name="giftId" value={open.id} />
-						<button type="submit" class="pressable btn h-12 w-full rounded-2xl btn-ghost"
-							>{t(data.locale, 'gift.withdraw')}</button
-						>
-					</form>
-				{/if}
-			</div>
-
-			<div class="mt-6">
-				<h3 class="text-sm font-bold tracking-wide text-slate uppercase">
-					{t(data.locale, 'comment.add')}
-				</h3>
-				<form method="POST" action="?/comment" use:enhance class="mt-3 flex gap-2">
+			{#if open.hiddenFromRecipient && open.createdByMe}
+				<form
+					method="POST"
+					action="?/deliver"
+					use:enhance={() => {
+						return async ({ result, update }) => {
+							await update();
+							if (result.type === 'success') closeGift();
+						};
+					}}
+				>
 					<input type="hidden" name="giftId" value={open.id} />
-					<input
-						class="input flex-1 rounded-2xl input-sm"
-						name="body"
-						placeholder={t(data.locale, 'comment.placeholder')}
-					/>
-					<button type="submit" class="pressable btn rounded-2xl btn-secondary"
-						>{t(data.locale, 'action.save')}</button
+					<button type="submit" class="pressable btn h-11 w-full rounded-2xl btn-primary"
+						>{t(data.locale, 'gift.deliver')}</button
 					>
 				</form>
-			</div>
-			<button
-				type="button"
-				class="pressable btn mt-6 h-12 w-full rounded-2xl btn-ghost"
-				use:onTap={closeGift}>{t(data.locale, 'action.cancel')}</button
-			>
+				<form
+					method="POST"
+					action="?/withdraw"
+					use:enhance={() => {
+						const id = open.id;
+						return async ({ result }) => {
+							if (result.type !== 'success') return;
+							gifts = gifts.filter((g) => g.id !== id);
+							closeGift();
+						};
+					}}
+				>
+					<input type="hidden" name="giftId" value={open.id} />
+					<button type="submit" class="pressable btn h-11 w-full rounded-2xl btn-ghost"
+						>{t(data.locale, 'gift.withdraw')}</button
+					>
+				</form>
+			{/if}
 		</div>
-	</div>
-{/if}
+
+		<div class="mt-4">
+			<h3 class="text-xs font-bold tracking-wide text-slate uppercase">
+				{t(data.locale, 'comment.add')}
+			</h3>
+			<form method="POST" action="?/comment" use:enhance class="mt-2 flex gap-2">
+				<input type="hidden" name="giftId" value={open.id} />
+				<input
+					class="input flex-1 rounded-2xl input-sm"
+					name="body"
+					placeholder={t(data.locale, 'comment.placeholder')}
+				/>
+				<button type="submit" class="pressable btn rounded-2xl btn-secondary"
+					>{t(data.locale, 'action.save')}</button
+				>
+			</form>
+		</div>
+		<button
+			type="button"
+			class="pressable btn mt-4 h-11 w-full rounded-2xl btn-ghost"
+			use:onTap={closeGift}>{t(data.locale, 'action.cancel')}</button
+		>
+	{/if}
+</BottomSheet>
 
 {#if pendingConfirm}
 	<div
@@ -240,7 +232,12 @@
 		style="z-index: 300"
 		role="presentation"
 	>
-		<div class="w-full max-w-sm rounded-[2rem] bg-paper p-6 shadow-2xl" role="dialog" aria-modal="true">
+		<div
+			class="absolute inset-0"
+			use:onTap={() => (pendingConfirm = null)}
+			aria-hidden="true"
+		></div>
+		<div class="relative z-10 w-full max-w-sm rounded-[2rem] bg-paper p-6 shadow-2xl" role="dialog" aria-modal="true">
 			<p class="text-center font-display text-2xl leading-tight font-semibold">
 				{pendingConfirm.type === 'unreserve'
 					? t(data.locale, 'gift.unreserve.confirm')
