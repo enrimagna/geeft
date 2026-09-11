@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { goto } from '$app/navigation';
+	import { goto, invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import Composer from '$lib/components/Composer.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
@@ -17,8 +18,13 @@
 	let pendingConfirm = $state<{ type: 'reserve' | 'unreserve'; id: string } | null>(null);
 	/** Ignore card taps briefly after close (ghost click under the sheet). */
 	let closedAt = 0;
-	/** Sheet visibility follows data.giftId only — no parallel openId to desync from URL. */
-	const open = $derived(data.giftId ? (gifts.find((g) => g.id === data.giftId) ?? null) : null);
+	/**
+	 * Sheet visibility follows the live page URL, not data.giftId.
+	 * goto can update the address bar before load data refreshes — binding to
+	 * data.giftId left the sheet open after Annulla (URL clear, stale giftId).
+	 */
+	const urlGiftId = $derived(page.url.searchParams.get('gift'));
+	const open = $derived(urlGiftId ? (gifts.find((g) => g.id === urlGiftId) ?? null) : null);
 
 	$effect(() => {
 		gifts = data.gifts;
@@ -28,24 +34,36 @@
 		gifts = gifts.map((g) => (g.id === id ? { ...g, reservation } : g));
 	}
 
+	/** resolve() is pathname-only — never pass ?query into it. */
 	function listUrl(extra: Record<string, string> = {}) {
 		const params = new URLSearchParams();
 		if (data.selected) params.set('list', data.selected);
 		for (const [k, v] of Object.entries(extra)) params.set(k, v);
 		const q = params.toString();
-		return resolve(q ? `/give?${q}` : '/give');
+		const path = resolve('/give');
+		return q ? `${path}?${q}` : path;
 	}
 
 	function openGift(id: string) {
 		if (Date.now() - closedAt < 500) return;
 		pendingConfirm = null;
-		void goto(listUrl({ gift: id }), { replaceState: true, keepFocus: true, noScroll: true });
+		void goto(listUrl({ gift: id }), {
+			replaceState: true,
+			keepFocus: true,
+			noScroll: true,
+			invalidateAll: true
+		});
 	}
 
 	function closeGift() {
 		closedAt = Date.now();
 		pendingConfirm = null;
-		void goto(listUrl(), { replaceState: true, keepFocus: true, noScroll: true });
+		void goto(listUrl(), {
+			replaceState: true,
+			keepFocus: true,
+			noScroll: true,
+			invalidateAll: true
+		});
 	}
 
 	function askReserve() {
@@ -67,7 +85,7 @@
 <div class="mt-4 flex flex-wrap gap-2 px-4 pb-2">
 	{#each data.lists as list (list.listId)}
 		<a
-			href={resolve(`/give?list=${list.listId}`)}
+			href={`${resolve('/give')}?list=${list.listId}`}
 			class="pressable inline-flex max-w-full shrink-0 items-center rounded-full px-3 py-1.5 text-sm font-semibold
 				{data.selected === list.listId
 				? 'bg-primary text-primary-content shadow-sm'
@@ -191,7 +209,7 @@
 				{t(data.locale, 'comment.add')}
 			</h3>
 			<ul class="mt-2 space-y-2">
-				{#each data.comments as comment (comment.id)}
+				{#each urlGiftId && data.giftId === urlGiftId ? data.comments : [] as comment (comment.id)}
 					<li class="rounded-2xl bg-white/80 p-3 text-sm">
 						{comment.body}
 						{#if comment.mine}

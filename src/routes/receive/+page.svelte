@@ -39,7 +39,7 @@
 	<div class="mt-4 flex flex-wrap gap-2 px-4">
 		{#each data.lists as list (list.listId)}
 			<a
-				href={resolve(`/receive?list=${list.listId}`)}
+				href={`${resolve('/receive')}?list=${list.listId}`}
 				class="pressable inline-flex shrink-0 items-center rounded-full px-3 py-1.5 text-sm font-semibold
 					{data.selected === list.listId
 					? 'bg-secondary text-secondary-content shadow-sm'
