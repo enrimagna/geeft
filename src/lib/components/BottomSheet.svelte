@@ -27,26 +27,8 @@
 </script>
 
 {#if open}
-	<!-- One layer: the dimmed scrim IS the outer flex box. No absolute full-screen
-	     sibling sitting on top of the panel (that ate Prenota/Annulla clicks). -->
-	<!-- svelte-ignore a11y_click_events_have_key_events -->
-	<!-- svelte-ignore a11y_no_static_element_interactions -->
-	<div
-		class="fixed inset-0 z-[80] flex items-end justify-center bg-ink/40"
-		role="presentation"
-		onclick={(e) => {
-			if (e.target === e.currentTarget) onclose();
-		}}
-	>
-		<!-- svelte-ignore a11y_no_static_element_interactions -->
-		<!-- svelte-ignore a11y_click_events_have_key_events -->
-		<div
-			class="flex max-h-[90dvh] w-full max-w-[430px] flex-col overflow-y-auto rounded-t-[2rem] bg-paper p-5 pb-10 shadow-2xl"
-			role="dialog"
-			aria-modal="true"
-			tabindex="-1"
-			onclick={(e) => e.stopPropagation()}
-		>
+	<div class="fixed inset-0 z-[80] overflow-y-auto bg-paper">
+		<div class="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col px-5 pb-10 pt-4">
 			{@render children()}
 		</div>
 	</div>

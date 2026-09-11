@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
-	import { goto, invalidateAll } from '$app/navigation';
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { page } from '$app/state';
+	import { onMount } from 'svelte';
 	import Composer from '$lib/components/Composer.svelte';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
@@ -16,25 +16,25 @@
 	let gifts = $state<GiveGift[]>(data.gifts);
 	let composer = $state(false);
 	let pendingConfirm = $state<{ type: 'reserve' | 'unreserve'; id: string } | null>(null);
-	/** Ignore card taps briefly after close (ghost click under the sheet). */
+	/** Local sheet state only — never re-derived from URL/load (those lag and desync). */
+	let openId = $state<string | null>(null);
 	let closedAt = 0;
-	/**
-	 * Sheet visibility follows the live page URL, not data.giftId.
-	 * goto can update the address bar before load data refreshes — binding to
-	 * data.giftId left the sheet open after Annulla (URL clear, stale giftId).
-	 */
-	const urlGiftId = $derived(page.url.searchParams.get('gift'));
-	const open = $derived(urlGiftId ? (gifts.find((g) => g.id === urlGiftId) ?? null) : null);
+	const open = $derived(openId ? (gifts.find((g) => g.id === openId) ?? null) : null);
 
 	$effect(() => {
 		gifts = data.gifts;
+	});
+
+	/** Deep link once from the landing URL; do not keep syncing afterward. */
+	onMount(() => {
+		const gift = new URL(window.location.href).searchParams.get('gift');
+		if (gift) openId = gift;
 	});
 
 	function applyReservation(id: string, reservation: GiveGift['reservation']) {
 		gifts = gifts.map((g) => (g.id === id ? { ...g, reservation } : g));
 	}
 
-	/** resolve() is pathname-only — never pass ?query into it. */
 	function listUrl(extra: Record<string, string> = {}) {
 		const params = new URLSearchParams();
 		if (data.selected) params.set('list', data.selected);
@@ -44,26 +44,27 @@
 		return q ? `${path}?${q}` : path;
 	}
 
+	/** Best-effort URL sync for comments load — must not own sheet visibility. */
+	function syncUrl(id: string | null) {
+		void goto(id ? listUrl({ gift: id }) : listUrl(), {
+			replaceState: true,
+			keepFocus: true,
+			noScroll: true
+		});
+	}
+
 	function openGift(id: string) {
 		if (Date.now() - closedAt < 500) return;
 		pendingConfirm = null;
-		void goto(listUrl({ gift: id }), {
-			replaceState: true,
-			keepFocus: true,
-			noScroll: true,
-			invalidateAll: true
-		});
+		openId = id;
+		syncUrl(id);
 	}
 
 	function closeGift() {
 		closedAt = Date.now();
 		pendingConfirm = null;
-		void goto(listUrl(), {
-			replaceState: true,
-			keepFocus: true,
-			noScroll: true,
-			invalidateAll: true
-		});
+		openId = null;
+		syncUrl(null);
 	}
 
 	function askReserve() {
@@ -209,7 +210,7 @@
 				{t(data.locale, 'comment.add')}
 			</h3>
 			<ul class="mt-2 space-y-2">
-				{#each urlGiftId && data.giftId === urlGiftId ? data.comments : [] as comment (comment.id)}
+				{#each openId && data.giftId === openId ? data.comments : [] as comment (comment.id)}
 					<li class="rounded-2xl bg-white/80 p-3 text-sm">
 						{comment.body}
 						{#if comment.mine}

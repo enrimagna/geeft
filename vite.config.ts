@@ -28,6 +28,7 @@ export default defineConfig({
 			strategy: ['cookie', 'baseLocale']
 		}),
 		VitePWA({
+			selfDestroying: true,
 			registerType: 'autoUpdate',
 			manifest: false,
 			workbox: {
