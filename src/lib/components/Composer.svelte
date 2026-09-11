@@ -32,15 +32,19 @@
 		<button
 			type="button"
 			class="absolute inset-0 bg-ink/30"
-			onclick={onclose}
+			onpointerdown={(e) => {
+				e.preventDefault();
+				onclose();
+			}}
 			aria-label={t(locale, 'action.close')}
 		></button>
 		<form
 			method="POST"
 			{action}
-			class="absolute inset-x-0 bottom-0 rounded-t-[2rem] bg-paper p-5 pb-8 shadow-2xl"
+			class="absolute inset-x-0 bottom-0 z-10 rounded-t-[2rem] bg-paper p-5 pb-8 shadow-2xl"
 			transition:fly={{ y: 80, duration: 320 }}
 			use:swipeDismiss={{ onclose }}
+			onpointerdown={(e) => e.stopPropagation()}
 			use:enhance={() => {
 				return async ({ result, update }) => {
 					if (result.type === 'success') {

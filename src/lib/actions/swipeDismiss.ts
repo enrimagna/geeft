@@ -9,8 +9,17 @@ export function swipeDismiss(
 	let dy = 0;
 	let tracking = false;
 
+	function isInteractive(target: EventTarget | null) {
+		if (!(target instanceof Element)) return false;
+		return Boolean(target.closest('button, a, input, textarea, select, label, [role="button"]'));
+	}
+
 	function onStart(e: TouchEvent) {
 		if (e.touches.length !== 1) return;
+		if (isInteractive(e.target)) {
+			tracking = false;
+			return;
+		}
 		const t = e.touches[0];
 		startY = t.clientY;
 		dy = 0;

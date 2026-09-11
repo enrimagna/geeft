@@ -78,14 +78,18 @@
 		<button
 			type="button"
 			class="absolute inset-0 bg-ink/35"
-			onclick={() => (openId = null)}
+			onpointerdown={(e) => {
+				e.preventDefault();
+				openId = null;
+			}}
 			transition:fade={{ duration: 160 }}
 			aria-label={t(data.locale, 'action.close')}
 		></button>
 		<div
-			class="relative w-full rounded-t-[2rem] bg-paper p-5 pb-10 shadow-2xl"
+			class="relative z-10 w-full rounded-t-[2rem] bg-paper p-5 pb-10 shadow-2xl"
 			transition:fly={{ y: 70, duration: 280 }}
 			use:swipeDismiss={{ onclose: () => (openId = null) }}
+			onpointerdown={(e) => e.stopPropagation()}
 		>
 			<button
 				type="button"

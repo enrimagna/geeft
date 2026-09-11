@@ -18,14 +18,21 @@
 	let composer = $state(false);
 	let confirm = $state<{ type: 'reserve' | 'unreserve'; id: string } | null>(null);
 	let openId = $state<string | null>(data.giftId);
-	const open = $derived(gifts.find((g) => g.id === openId) ?? null);
+	/** While true, ignore data.giftId so close is not undone by a stale URL/load. */
+	let ignoreGiftUrl = $state(false);
+	const open = $derived(openId ? (gifts.find((g) => g.id === openId) ?? null) : null);
 
 	$effect(() => {
 		gifts = data.gifts;
 	});
 
 	$effect(() => {
-		if (data.giftId) openId = data.giftId;
+		const id = data.giftId ?? null;
+		if (ignoreGiftUrl) {
+			if (!id) ignoreGiftUrl = false;
+			return;
+		}
+		openId = id;
 	});
 
 	function applyReservation(id: string, reservation: GiveGift['reservation']) {
@@ -38,9 +45,10 @@
 	});
 
 	function openGift(id: string) {
+		ignoreGiftUrl = false;
 		openId = id;
 		if (data.selected)
-			goto(resolve(`/give?list=${data.selected}&gift=${id}`), {
+			void goto(resolve(`/give?list=${data.selected}&gift=${id}`), {
 				replaceState: true,
 				keepFocus: true,
 				noScroll: true
@@ -48,9 +56,10 @@
 	}
 
 	function closeGift() {
+		ignoreGiftUrl = true;
 		openId = null;
 		if (data.selected)
-			goto(resolve(`/give?list=${data.selected}`), {
+			void goto(resolve(`/give?list=${data.selected}`), {
 				replaceState: true,
 				keepFocus: true,
 				noScroll: true
@@ -105,14 +114,18 @@
 		<button
 			type="button"
 			class="absolute inset-0 bg-ink/35"
-			onclick={closeGift}
+			onpointerdown={(e) => {
+				e.preventDefault();
+				closeGift();
+			}}
 			transition:fade={{ duration: 160 }}
 			aria-label={t(data.locale, 'action.close')}
 		></button>
 		<div
-			class="relative max-h-[85dvh] w-full overflow-y-auto rounded-t-[2rem] bg-paper p-5 pb-10 shadow-2xl"
+			class="relative z-10 max-h-[85dvh] w-full overflow-y-auto rounded-t-[2rem] bg-paper p-5 pb-10 shadow-2xl"
 			transition:fly={{ y: 70, duration: 280 }}
 			use:swipeDismiss={{ onclose: closeGift }}
+			onpointerdown={(e) => e.stopPropagation()}
 		>
 			<button
 				type="button"
