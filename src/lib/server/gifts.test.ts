@@ -12,7 +12,9 @@ import {
 	deleteOwnGift,
 	listGiveGifts,
 	listReceiveGifts,
+	markReceived,
 	reserveGift,
+	unmarkReceived,
 	unreserveGift,
 	updateOwnGift,
 	withdrawSecret
@@ -187,5 +189,47 @@ describe('privacy and reservations', () => {
 	it('does not let a recipient browse own list in Give', () => {
 		const db = setup();
 		expect(() => listGiveGifts(db, 'list-lucile', 'u-lucile', 'fam')).toThrow(AppError);
+	});
+
+	it('clears received_at on unmark and allows reserve again', () => {
+		const db = setup();
+		const idea = createOwnGift(db, {
+			listId: 'list-lucile',
+			actorId: 'u-lucile',
+			familyId: 'fam',
+			locale: 'it',
+			title: 'Libro'
+		});
+		const marked = markReceived(db, idea.id, 'u-lucile', 'fam', 'it');
+		expect(marked.receivedAt).toBeTruthy();
+		expect(JSON.stringify(marked)).not.toContain('reserved');
+		try {
+			reserveGift(db, idea.id, 'u-enrico', 'fam', 'it');
+			expect.unreachable('reserve must fail while received');
+		} catch (error) {
+			expect((error as AppError).status).toBe(409);
+		}
+		const cleared = unmarkReceived(db, idea.id, 'u-lucile', 'fam', 'it');
+		expect(cleared.receivedAt).toBeNull();
+		expect(JSON.stringify(cleared)).not.toContain('reserved');
+		const reserved = reserveGift(db, idea.id, 'u-enrico', 'fam', 'it');
+		expect(reserved.reservation).toBe('mine');
+	});
+
+	it('rejects unmark when gift is not received', () => {
+		const db = setup();
+		const idea = createOwnGift(db, {
+			listId: 'list-lucile',
+			actorId: 'u-lucile',
+			familyId: 'fam',
+			locale: 'it',
+			title: 'Tazza'
+		});
+		try {
+			unmarkReceived(db, idea.id, 'u-lucile', 'fam', 'it');
+			expect.unreachable();
+		} catch (error) {
+			expect((error as AppError).status).toBe(409);
+		}
 	});
 });

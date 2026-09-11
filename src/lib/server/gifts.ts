@@ -1,4 +1,4 @@
-import { and, asc, eq, isNull } from 'drizzle-orm';
+import { and, asc, eq, isNotNull, isNull } from 'drizzle-orm';
 import type { Db } from '$lib/server/db/sqlite';
 import { gift, giftComment } from '$lib/server/db/schema';
 import { AppError } from '$lib/server/errors';
@@ -128,6 +128,23 @@ export function markReceived(
 		.set({ receivedAt: new Date(), updatedAt: new Date() })
 		.where(eq(gift.id, row.id))
 		.run();
+	return toReceiveGift(db.select().from(gift).where(eq(gift.id, row.id)).get()!);
+}
+
+export function unmarkReceived(
+	db: Db,
+	giftId: string,
+	actorId: string,
+	familyId: string,
+	locale: Locale
+) {
+	const row = loadOwnedGift(db, giftId, actorId, familyId, locale);
+	const updated = db
+		.update(gift)
+		.set({ receivedAt: null, updatedAt: new Date() })
+		.where(and(eq(gift.id, row.id), isNotNull(gift.receivedAt)))
+		.run();
+	if (updated.changes === 0) throw new AppError(409, 'error.validation', locale);
 	return toReceiveGift(db.select().from(gift).where(eq(gift.id, row.id)).get()!);
 }
 

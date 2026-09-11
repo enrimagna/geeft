@@ -6,6 +6,7 @@ import {
 	deleteOwnGift,
 	listReceiveGifts,
 	markReceived,
+	unmarkReceived,
 	updateOwnGift
 } from '$lib/server/gifts';
 import { requireCurrentFamily, requirePageUser } from '$lib/server/session';
@@ -83,6 +84,17 @@ export const actions: Actions = {
 			const fam = requireCurrentFamily(db, user);
 			const form = await event.request.formData();
 			markReceived(db, form.get('giftId')?.toString() ?? '', user.id, fam.id, user.locale);
+			return { ok: true };
+		} catch (error) {
+			return actionFail(error);
+		}
+	},
+	unreceived: async (event) => {
+		const user = requirePageUser(event);
+		try {
+			const fam = requireCurrentFamily(db, user);
+			const form = await event.request.formData();
+			unmarkReceived(db, form.get('giftId')?.toString() ?? '', user.id, fam.id, user.locale);
 			return { ok: true };
 		} catch (error) {
 			return actionFail(error);

@@ -11,10 +11,15 @@
 
 	const path = $derived(page.url.pathname);
 	const nav = $derived(
-		path.startsWith('/give') ? 'give' : path.startsWith('/receive') ? 'receive' : null
+		path === '/give' || path.startsWith('/give/')
+			? 'give'
+			: path === '/receive' || path.startsWith('/receive/')
+				? 'receive'
+				: null
 	);
 	const signedIn = $derived(Boolean(data.user));
 	const inSettings = $derived(path.startsWith('/settings'));
+	const showBottomNav = $derived(nav !== null);
 </script>
 
 <svelte:head>
@@ -33,12 +38,12 @@
 
 <div class="geeft-shell relative z-10">
 	{#key path}
-		<div in:fade={{ duration: 160 }} class="min-h-dvh pb-28">
+		<div in:fade={{ duration: 160 }} class="min-h-dvh {showBottomNav ? 'pb-28' : 'pb-8'}">
 			{@render children()}
 		</div>
 	{/key}
 </div>
 
-{#if signedIn}
+{#if signedIn && showBottomNav}
 	<BottomNav locale={data.locale} current={nav} />
 {/if}

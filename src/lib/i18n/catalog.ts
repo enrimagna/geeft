@@ -60,6 +60,16 @@ const catalog = {
 		fr: 'Marquer comme reçu',
 		en: 'Mark as received'
 	},
+	'gift.unmarkReceived': {
+		it: 'Segna come non ricevuto',
+		fr: 'Marquer comme non reçu',
+		en: 'Mark as not received'
+	},
+	'gift.unreceive.confirm': {
+		it: 'Vuoi annullare lo stato ricevuto?',
+		fr: 'Voulez-vous annuler le statut reçu ?',
+		en: 'Do you want to clear the received status?'
+	},
 	'gift.secret': { it: 'Sorpresa', fr: 'Surprise', en: 'Surprise' },
 	'gift.secret.hint': {
 		it: 'Solo chi regala la vede. Prenotala se vuoi occupartene tu.',

@@ -15,5 +15,8 @@ describe('critical i18n', () => {
 		expect(t('it', 'action.confirm')).toBe('Conferma');
 		expect(t('it', 'app.settings')).toBe('Impostazioni');
 		expect(t('fr', 'locale.fr')).toBe('Français');
+		expect(t('it', 'gift.unmarkReceived')).toBe('Segna come non ricevuto');
+		expect(t('fr', 'gift.unreceive.confirm')).toBe('Voulez-vous annuler le statut reçu ?');
+		expect(t('en', 'gift.unmarkReceived')).toBe('Mark as not received');
 	});
 });

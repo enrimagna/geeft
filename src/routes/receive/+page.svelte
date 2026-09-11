@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
+	import { invalidateAll } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import Composer from '$lib/components/Composer.svelte';
+	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import GiftCard from '$lib/components/GiftCard.svelte';
 	import { t } from '$lib/i18n/catalog';
@@ -12,6 +14,7 @@
 	const gifts = $derived(data.gifts);
 	let composer = $state(false);
 	let openId = $state<string | null>(null);
+	let confirmUnreceive = $state<string | null>(null);
 	const open = $derived(gifts.find((g) => g.id === openId) ?? null);
 </script>
 
@@ -88,16 +91,28 @@
 					>{t(data.locale, 'gift.openLink')}</button
 				>
 			{/if}
+			{#if open.receivedAt}
+				<p class="mt-3 text-sm font-semibold text-slate">{t(data.locale, 'gift.received')}</p>
+			{/if}
 			{#if form?.message}
 				<p class="mt-3 text-sm text-error">{form.message}</p>
 			{/if}
 			<div class="mt-6 grid grid-cols-2 gap-3">
-				<form method="POST" action="?/received" use:enhance>
-					<input type="hidden" name="giftId" value={open.id} />
-					<button class="pressable btn w-full rounded-2xl btn-primary"
-						>{t(data.locale, 'gift.markReceived')}</button
+				{#if open.receivedAt}
+					<button
+						class="pressable btn w-full rounded-2xl btn-primary"
+						type="button"
+						onclick={() => (confirmUnreceive = open.id)}
+						>{t(data.locale, 'gift.unmarkReceived')}</button
 					>
-				</form>
+				{:else}
+					<form method="POST" action="?/received" use:enhance>
+						<input type="hidden" name="giftId" value={open.id} />
+						<button class="pressable btn w-full rounded-2xl btn-primary"
+							>{t(data.locale, 'gift.markReceived')}</button
+						>
+					</form>
+				{/if}
 				<form method="POST" action="?/delete" use:enhance>
 					<input type="hidden" name="giftId" value={open.id} />
 					<button class="pressable btn w-full rounded-2xl btn-ghost"
@@ -108,3 +123,20 @@
 		</div>
 	</div>
 {/if}
+
+<ConfirmDialog
+	open={Boolean(confirmUnreceive)}
+	locale={data.locale}
+	title={t(data.locale, 'gift.unreceive.confirm')}
+	oncancel={() => (confirmUnreceive = null)}
+	onconfirm={() => {
+		if (!confirmUnreceive) return;
+		const id = confirmUnreceive;
+		confirmUnreceive = null;
+		const fd = new FormData();
+		fd.set('giftId', id);
+		fetch('?/unreceived', { method: 'POST', body: fd, credentials: 'include' }).then(() =>
+			invalidateAll()
+		);
+	}}
+/>
