@@ -41,20 +41,32 @@
 {#if open}
 	<div
 		use:portal
-		class="fixed inset-0 flex items-end justify-center sm:items-center sm:p-4"
+		class="fixed inset-0 flex items-end justify-center sm:items-end sm:justify-center sm:p-0"
 		style="z-index: 200"
 		role="presentation"
 	>
 		<div class="absolute inset-0 bg-ink/40" use:onTap={onclose} aria-hidden="true"></div>
 		<div
-			class="relative z-10 flex max-h-[80dvh] w-full max-w-[430px] flex-col overflow-hidden rounded-t-[2rem] bg-paper shadow-2xl touch-none sm:rounded-[2rem] sm:touch-auto"
+			class="relative z-10 flex max-h-[90dvh] w-full max-w-[430px] flex-col overflow-hidden rounded-t-[2rem] bg-paper shadow-2xl"
 			role="dialog"
 			aria-modal="true"
-			use:swipeDismiss={{ onclose }}
+			use:swipeDismiss={{ onclose, threshold: 72 }}
 		>
 			<div
+				data-sheet-handle
+				class="flex shrink-0 cursor-grab touch-none flex-col items-center pt-3 pb-1 active:cursor-grabbing"
+			>
+				<button
+					type="button"
+					data-sheet-handle
+					class="block h-1.5 w-12 rounded-full bg-mist"
+					aria-label="Close"
+					use:onTap={onclose}
+				></button>
+			</div>
+			<div
 				data-sheet-scroll
-				class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-3 pb-8 touch-pan-y"
+				class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-1 pb-8"
 			>
 				{@render children()}
 			</div>

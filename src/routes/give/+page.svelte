@@ -118,12 +118,6 @@
 
 <BottomSheet open={open !== null} onclose={closeGift}>
 	{#if open}
-		<button
-			type="button"
-			class="mx-auto mb-3 block h-1.5 w-12 rounded-full bg-mist"
-			use:onTap={closeGift}
-			aria-label={t(data.locale, 'action.close')}
-		></button>
 		{#if open.hiddenFromRecipient}
 			<p class="mb-2 text-xs font-bold tracking-widest text-peach uppercase">
 				{t(data.locale, 'gift.secret')}

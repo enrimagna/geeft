@@ -81,12 +81,6 @@
 
 <BottomSheet open={open !== null} onclose={closeSheet}>
 	{#if open}
-		<button
-			type="button"
-			class="ribbon mb-4 block h-2 w-24 rounded-full bg-peach"
-			use:onTap={closeSheet}
-			aria-label={t(data.locale, 'action.close')}
-		></button>
 		<h2 class="font-display text-3xl leading-tight">{open.title}</h2>
 		{#if open.description}
 			<p class="mt-3 text-slate">{open.description}</p>
