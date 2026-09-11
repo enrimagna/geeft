@@ -27,23 +27,20 @@
 </script>
 
 {#if open}
-	<div class="fixed inset-0 z-[80] flex items-end justify-center">
+	<div class="fixed inset-0 z-[80] flex items-end justify-center" style="pointer-events: none">
 		<button
 			type="button"
 			class="absolute inset-0 bg-ink/40"
+			style="pointer-events: auto"
 			aria-label="Close"
-			onpointerdown={(e) => {
-				e.preventDefault();
-				onclose();
-			}}
+			onclick={() => onclose()}
 		></button>
-		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
 			class="relative z-10 flex max-h-[90dvh] w-full max-w-[430px] flex-col overflow-y-auto rounded-t-[2rem] bg-paper p-5 pb-10 shadow-2xl"
+			style="pointer-events: auto"
 			role="dialog"
 			aria-modal="true"
 			tabindex="-1"
-			onpointerdown={(e) => e.stopPropagation()}
 		>
 			{@render children()}
 		</div>

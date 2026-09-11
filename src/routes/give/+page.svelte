@@ -15,21 +15,13 @@
 	let gifts = $state<GiveGift[]>(data.gifts);
 	let composer = $state(false);
 	let pendingConfirm = $state<{ type: 'reserve' | 'unreserve'; id: string } | null>(null);
-	let openId = $state<string | null>(null);
 	/** Ignore card taps briefly after close (ghost click under the sheet). */
 	let closedAt = 0;
-	const open = $derived(openId ? (gifts.find((g) => g.id === openId) ?? null) : null);
+	/** Sheet visibility follows data.giftId only — no parallel openId to desync from URL. */
+	const open = $derived(data.giftId ? (gifts.find((g) => g.id === data.giftId) ?? null) : null);
 
 	$effect(() => {
 		gifts = data.gifts;
-	});
-
-	/** Deep-link once; openId owns sheet visibility after that. */
-	let hydratedDeepLink = false;
-	$effect(() => {
-		if (hydratedDeepLink) return;
-		hydratedDeepLink = true;
-		if (data.giftId) openId = data.giftId;
 	});
 
 	function applyReservation(id: string, reservation: GiveGift['reservation']) {
@@ -44,25 +36,26 @@
 		return resolve(q ? `/give?${q}` : '/give');
 	}
 
-	/** Load comments via ?gift= without driving sheet open/close. */
-	function syncGiftQuery(id: string | null) {
-		const url = id ? listUrl({ gift: id }) : listUrl();
-		return goto(url, { replaceState: true, keepFocus: true, noScroll: true });
-	}
-
 	function openGift(id: string) {
 		if (Date.now() - closedAt < 500) return;
 		pendingConfirm = null;
-		openId = id;
-		void syncGiftQuery(id);
+		void goto(listUrl({ gift: id }), { replaceState: true, keepFocus: true, noScroll: true });
 	}
 
 	function closeGift() {
-		if (!openId && !pendingConfirm) return;
 		closedAt = Date.now();
 		pendingConfirm = null;
-		openId = null;
-		void syncGiftQuery(null);
+		void goto(listUrl(), { replaceState: true, keepFocus: true, noScroll: true });
+	}
+
+	function askReserve() {
+		if (!open || open.receivedAt) return;
+		pendingConfirm = { type: 'reserve', id: open.id };
+	}
+
+	function askUnreserve() {
+		if (!open || open.receivedAt) return;
+		pendingConfirm = { type: 'unreserve', id: open.id };
 	}
 </script>
 
@@ -145,7 +138,7 @@
 				<button
 					type="button"
 					class="pressable btn h-12 w-full rounded-2xl font-bold btn-secondary"
-					onclick={() => (pendingConfirm = { type: 'reserve', id: open.id })}
+					onclick={askReserve}
 					>{t(data.locale, 'action.reserve')}</button
 				>
 			{/if}
@@ -153,7 +146,7 @@
 				<button
 					type="button"
 					class="pressable btn h-12 w-full rounded-2xl btn-ghost"
-					onclick={() => (pendingConfirm = { type: 'unreserve', id: open.id })}
+					onclick={askUnreserve}
 					>{t(data.locale, 'action.unreserve')}</button
 				>
 			{/if}
