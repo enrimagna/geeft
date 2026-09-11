@@ -9,6 +9,7 @@
 	import type { GiveGift } from '$lib/server/visibility';
 	import type { ActionData, PageProps } from './$types';
 	import type { Action } from 'svelte/action';
+	import { untrack } from 'svelte';
 	import { onTap } from '$lib/actions/onTap';
 
 	let { data, form }: PageProps & { form: ActionData } = $props();
@@ -20,7 +21,10 @@
 	const open = $derived(openId ? (gifts.find((g) => g.id === openId) ?? null) : null);
 
 	$effect(() => {
-		gifts = data.gifts;
+		const next = data.gifts;
+		untrack(() => {
+			gifts = next;
+		});
 	});
 
 	$effect(() => {

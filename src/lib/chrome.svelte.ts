@@ -1,4 +1,6 @@
 /** App chrome: hide bottom nav while sheets/dialogs are open. */
+import { untrack } from 'svelte';
+
 class Chrome {
 	overlayCount = $state(0);
 
@@ -6,11 +8,19 @@ class Chrome {
 		return this.overlayCount > 0;
 	}
 
-	/** Call while an overlay is shown; returns a disposer. */
+	/**
+	 * Call while an overlay is shown; returns a disposer.
+	 * Mutations are untracked so $effect callers that invoke acquire()
+	 * do not re-subscribe to overlayCount and hit effect_update_depth_exceeded.
+	 */
 	acquire() {
-		this.overlayCount += 1;
+		untrack(() => {
+			this.overlayCount += 1;
+		});
 		return () => {
-			this.overlayCount = Math.max(0, this.overlayCount - 1);
+			untrack(() => {
+				this.overlayCount = Math.max(0, this.overlayCount - 1);
+			});
 		};
 	}
 }
