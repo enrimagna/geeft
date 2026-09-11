@@ -39,12 +39,6 @@
 			{#each Object.entries(hidden) as [key, value] (key)}
 				<input type="hidden" name={key} {value} />
 			{/each}
-			<button
-				type="button"
-				class="mx-auto mb-4 block h-1.5 w-16 rounded-full bg-mist"
-				onclick={onclose}
-				aria-label={t(locale, 'action.close')}
-			></button>
 			<h2 class="font-display text-2xl font-semibold">
 				{secret ? t(locale, 'gift.addSecret') : t(locale, 'gift.add')}
 			</h2>
