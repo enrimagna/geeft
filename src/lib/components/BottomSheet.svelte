@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { chrome } from '$lib/chrome.svelte';
 	import { onTap } from '$lib/actions/onTap';
+	import { swipeDismiss } from '$lib/actions/swipeDismiss';
 	import type { Action } from 'svelte/action';
 	import type { Snippet } from 'svelte';
 
@@ -44,17 +45,17 @@
 		style="z-index: 200"
 		role="presentation"
 	>
+		<div class="absolute inset-0 bg-ink/40" use:onTap={onclose} aria-hidden="true"></div>
 		<div
-			class="absolute inset-0 bg-ink/40"
-			use:onTap={onclose}
-			aria-hidden="true"
-		></div>
-		<div
-			class="relative z-10 flex max-h-[80dvh] w-full max-w-[430px] flex-col overflow-hidden rounded-t-[2rem] bg-paper shadow-2xl sm:rounded-[2rem]"
+			class="relative z-10 flex max-h-[80dvh] w-full max-w-[430px] flex-col overflow-hidden rounded-t-[2rem] bg-paper shadow-2xl touch-none sm:rounded-[2rem] sm:touch-auto"
 			role="dialog"
 			aria-modal="true"
+			use:swipeDismiss={{ onclose }}
 		>
-			<div class="min-h-0 flex-1 overflow-y-auto px-5 pt-3 pb-8">
+			<div
+				data-sheet-scroll
+				class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pt-3 pb-8 touch-pan-y"
+			>
 				{@render children()}
 			</div>
 		</div>
