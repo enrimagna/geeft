@@ -6,32 +6,27 @@
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import GiftCard from '$lib/components/GiftCard.svelte';
-	import { swipeDismiss } from '$lib/actions/swipeDismiss';
-	import { chrome } from '$lib/chrome.svelte';
+	import BottomSheet from '$lib/components/BottomSheet.svelte';
 	import { t } from '$lib/i18n/catalog';
-	import { fade, fly } from 'svelte/transition';
-	import type { ActionData, PageProps } from './$types';
+		import type { ActionData, PageProps } from './$types';
 
 	let { data, form }: PageProps & { form: ActionData } = $props();
 	const gifts = $derived(data.gifts);
 	let composer = $state(false);
 	let openId = $state<string | null>(null);
 	let confirmUnreceive = $state<string | null>(null);
-	let clickShield = $state(false);
+	let closedAt = 0;
 	const open = $derived(openId ? (gifts.find((g) => g.id === openId) ?? null) : null);
 
-	$effect(() => {
-		if (!open) return;
-		return chrome.acquire();
-	});
+	function openSheet(id: string) {
+		if (Date.now() - closedAt < 500) return;
+		openId = id;
+	}
 
 	function closeSheet() {
 		if (!openId) return;
+		closedAt = Date.now();
 		openId = null;
-		clickShield = true;
-		window.setTimeout(() => {
-			clickShield = false;
-		}, 450);
 	}
 </script>
 
@@ -64,7 +59,7 @@
 			index={i}
 			locale={data.locale}
 			mode="receive"
-			onclick={() => (openId = gift.id)}
+			onclick={() => openSheet(gift.id)}
 		/>
 	{/each}
 </section>
@@ -83,94 +78,63 @@
 	onclose={() => (composer = false)}
 />
 
-{#if open}
-	<div class="fixed inset-0 z-50 flex items-end">
+<BottomSheet open={open !== null} onclose={closeSheet}>
+	{#if open}
 		<button
 			type="button"
-			class="absolute inset-0 bg-ink/35"
-			onpointerdown={(e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				closeSheet();
-			}}
-			transition:fade={{ duration: 160 }}
+			class="ribbon mb-4 block h-2 w-24 rounded-full bg-peach"
+			onclick={closeSheet}
 			aria-label={t(data.locale, 'action.close')}
 		></button>
-		<div
-			class="relative z-10 w-full rounded-t-[2rem] bg-paper p-5 pb-10 shadow-2xl"
-			transition:fly={{ y: 70, duration: 280 }}
-			use:swipeDismiss={{ onclose: closeSheet }}
-			role="dialog"
-			aria-modal="true"
-			onpointerdown={(e) => e.stopPropagation()}
-		>
+		<h2 class="font-display text-3xl leading-tight">{open.title}</h2>
+		{#if open.description}
+			<p class="mt-3 text-slate">{open.description}</p>
+		{/if}
+		{#if open.url}
 			<button
 				type="button"
-				class="ribbon mb-4 block h-2 w-24 rounded-full bg-peach"
-				onpointerdown={(e) => {
-					e.preventDefault();
-					e.stopPropagation();
-					closeSheet();
-				}}
-				aria-label={t(data.locale, 'action.close')}
-			></button>
-			<h2 class="font-display text-3xl leading-tight">{open.title}</h2>
-			{#if open.description}
-				<p class="mt-3 text-slate">{open.description}</p>
-			{/if}
-			{#if open.url}
-				<button
-					type="button"
-					class="mt-3 font-semibold text-primary underline"
-					onclick={() => window.open(open.url!, '_blank', 'noopener,noreferrer')}
-					>{t(data.locale, 'gift.openLink')}</button
-				>
-			{/if}
+				class="mt-3 font-semibold text-primary underline"
+				onclick={() => window.open(open.url!, '_blank', 'noopener,noreferrer')}
+				>{t(data.locale, 'gift.openLink')}</button
+			>
+		{/if}
+		{#if open.receivedAt}
+			<p class="mt-3 text-sm font-semibold text-slate">{t(data.locale, 'gift.received')}</p>
+		{/if}
+		{#if form?.message}
+			<p class="mt-3 text-sm text-error">{form.message}</p>
+		{/if}
+		<div class="mt-6 grid grid-cols-2 gap-3">
+			<button
+				type="button"
+				class="pressable btn w-full rounded-2xl btn-ghost col-span-2"
+				onclick={closeSheet}>{t(data.locale, 'action.cancel')}</button
+			>
 			{#if open.receivedAt}
-				<p class="mt-3 text-sm font-semibold text-slate">{t(data.locale, 'gift.received')}</p>
-			{/if}
-			{#if form?.message}
-				<p class="mt-3 text-sm text-error">{form.message}</p>
-			{/if}
-			<div class="mt-6 grid grid-cols-2 gap-3">
 				<button
+					class="pressable btn w-full rounded-2xl btn-primary"
 					type="button"
-					class="pressable btn w-full rounded-2xl btn-ghost col-span-2"
-					onpointerdown={(e) => {
-						e.preventDefault();
-						e.stopPropagation();
-						closeSheet();
-					}}>{t(data.locale, 'action.cancel')}</button
+					onclick={() => (confirmUnreceive = open.id)}
+					>{t(data.locale, 'gift.unmarkReceived')}</button
 				>
-				{#if open.receivedAt}
-					<button
-						class="pressable btn w-full rounded-2xl btn-primary"
-						type="button"
-						onclick={() => (confirmUnreceive = open.id)}
-						>{t(data.locale, 'gift.unmarkReceived')}</button
-					>
-				{:else}
-					<form method="POST" action="?/received" use:enhance>
-						<input type="hidden" name="giftId" value={open.id} />
-						<button class="pressable btn w-full rounded-2xl btn-primary"
-							>{t(data.locale, 'gift.markReceived')}</button
-						>
-					</form>
-				{/if}
-				<form method="POST" action="?/delete" use:enhance>
+			{:else}
+				<form method="POST" action="?/received" use:enhance>
 					<input type="hidden" name="giftId" value={open.id} />
-					<button class="pressable btn w-full rounded-2xl btn-ghost"
-						>{t(data.locale, 'gift.delete')}</button
+					<button class="pressable btn w-full rounded-2xl btn-primary"
+						>{t(data.locale, 'gift.markReceived')}</button
 					>
 				</form>
-			</div>
+			{/if}
+			<form method="POST" action="?/delete" use:enhance>
+				<input type="hidden" name="giftId" value={open.id} />
+				<button class="pressable btn w-full rounded-2xl btn-ghost"
+					>{t(data.locale, 'gift.delete')}</button
+				>
+			</form>
 		</div>
-	</div>
-{/if}
+	{/if}
+	</BottomSheet>
 
-{#if clickShield}
-	<div class="fixed inset-0 z-[80]" aria-hidden="true"></div>
-{/if}
 
 <ConfirmDialog
 	open={Boolean(confirmUnreceive)}

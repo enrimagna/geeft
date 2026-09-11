@@ -6,28 +6,24 @@
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import GiftCard from '$lib/components/GiftCard.svelte';
-	import { swipeDismiss } from '$lib/actions/swipeDismiss';
-	import { chrome } from '$lib/chrome.svelte';
+	import BottomSheet from '$lib/components/BottomSheet.svelte';
 	import { t } from '$lib/i18n/catalog';
 	import type { GiveGift } from '$lib/server/visibility';
-	import { fade, fly } from 'svelte/transition';
 	import type { ActionData, PageProps } from './$types';
 
 	let { data, form }: PageProps & { form: ActionData } = $props();
 	let gifts = $state<GiveGift[]>(data.gifts);
 	let composer = $state(false);
 	let confirm = $state<{ type: 'reserve' | 'unreserve'; id: string } | null>(null);
-	/** Sheet open state is LOCAL only — never re-driven from ?gift=. */
 	let openId = $state<string | null>(null);
-	/** Blocks the ghost click that hits the card under the sheet after close. */
-	let clickShield = $state(false);
+	/** Ignore card taps briefly after close (ghost click under the sheet). */
+	let closedAt = 0;
 	const open = $derived(openId ? (gifts.find((g) => g.id === openId) ?? null) : null);
 
 	$effect(() => {
 		gifts = data.gifts;
 	});
 
-	// Deep link once: open from ?gift= on first load only, never continuously sync.
 	let didHydrateGift = false;
 	$effect(() => {
 		if (didHydrateGift) return;
@@ -39,11 +35,6 @@
 		gifts = gifts.map((g) => (g.id === id ? { ...g, reservation } : g));
 	}
 
-	$effect(() => {
-		if (!open) return;
-		return chrome.acquire();
-	});
-
 	function listUrl(extra: Record<string, string> = {}) {
 		const params = new URLSearchParams();
 		if (data.selected) params.set('list', data.selected);
@@ -53,8 +44,8 @@
 	}
 
 	function openGift(id: string) {
+		if (Date.now() - closedAt < 500) return;
 		openId = id;
-		// URL only loads comments; it must not own open/closed.
 		void goto(listUrl({ gift: id }), {
 			replaceState: true,
 			keepFocus: true,
@@ -64,11 +55,8 @@
 
 	function closeGift() {
 		if (!openId) return;
+		closedAt = Date.now();
 		openId = null;
-		clickShield = true;
-		window.setTimeout(() => {
-			clickShield = false;
-		}, 450);
 		const url = listUrl();
 		if (typeof history !== 'undefined') history.replaceState(history.state, '', url);
 		void goto(url, { replaceState: true, keepFocus: true, noScroll: true });
@@ -117,142 +105,119 @@
 	/>
 {/if}
 
-{#if open}
-	<div class="fixed inset-0 z-50 flex items-end">
+<BottomSheet open={open !== null} onclose={closeGift}>
+	{#if open}
 		<button
 			type="button"
-			class="absolute inset-0 bg-ink/35"
-			onpointerdown={(e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				closeGift();
-			}}
-			transition:fade={{ duration: 160 }}
+			class="mx-auto mb-4 block h-1.5 w-16 rounded-full bg-mist"
+			onclick={closeGift}
 			aria-label={t(data.locale, 'action.close')}
 		></button>
-		<div
-			class="relative z-10 max-h-[85dvh] w-full overflow-y-auto rounded-t-[2rem] bg-paper p-5 pb-10 shadow-2xl"
-			transition:fly={{ y: 70, duration: 280 }}
-			use:swipeDismiss={{ onclose: closeGift }}
-			role="dialog"
-			aria-modal="true"
-			onpointerdown={(e) => e.stopPropagation()}
-		>
+		{#if open.hiddenFromRecipient}
+			<p class="mb-2 text-xs font-bold tracking-widest text-peach uppercase">
+				{t(data.locale, 'gift.secret')}
+			</p>
+		{/if}
+		<h2 class="font-display text-3xl leading-tight">{open.title}</h2>
+		{#if open.description}
+			<p class="mt-3 text-slate">{open.description}</p>
+		{/if}
+		{#if open.url}
 			<button
 				type="button"
-				class="mx-auto mb-4 block h-1.5 w-16 rounded-full bg-mist"
-				onpointerdown={(e) => {
-					e.preventDefault();
-					e.stopPropagation();
-					closeGift();
-				}}
-				aria-label={t(data.locale, 'action.close')}
-			></button>
-			{#if open.hiddenFromRecipient}
-				<p class="mb-2 text-xs font-bold tracking-widest text-peach uppercase">
-					{t(data.locale, 'gift.secret')}
-				</p>
-			{/if}
-			<h2 class="font-display text-3xl leading-tight">{open.title}</h2>
-			{#if open.description}
-				<p class="mt-3 text-slate">{open.description}</p>
-			{/if}
-			{#if open.url}
+				class="mt-3 font-semibold text-primary underline"
+				onclick={() => window.open(open.url!, '_blank', 'noopener,noreferrer')}
+				>{t(data.locale, 'gift.openLink')}</button
+			>
+		{/if}
+		{#if open.receivedAt}
+			<p class="mt-3 text-sm font-semibold text-slate">{t(data.locale, 'gift.received')}</p>
+		{/if}
+		{#if form && 'message' in form && form.message && !('ok' in form)}
+			<p class="mt-3 text-sm text-error">{form.message}</p>
+		{/if}
+
+		<div class="mt-5 space-y-2">
+			{#if open.reservation === 'none' && !open.receivedAt}
 				<button
-					type="button"
-					class="mt-3 font-semibold text-primary underline"
-					onclick={() => window.open(open.url!, '_blank', 'noopener,noreferrer')}
-					>{t(data.locale, 'gift.openLink')}</button
+					class="pressable btn h-12 w-full rounded-2xl font-bold btn-secondary"
+					onclick={() => (confirm = { type: 'reserve', id: open.id })}
+					>{t(data.locale, 'action.reserve')}</button
 				>
 			{/if}
-			{#if open.receivedAt}
-				<p class="mt-3 text-sm font-semibold text-slate">{t(data.locale, 'gift.received')}</p>
+			{#if open.reservation === 'mine' && !open.receivedAt}
+				<button
+					class="pressable btn h-12 w-full rounded-2xl btn-ghost"
+					onclick={() => (confirm = { type: 'unreserve', id: open.id })}
+					>{t(data.locale, 'action.unreserve')}</button
+				>
 			{/if}
-			{#if form && 'message' in form && form.message && !('ok' in form)}
-				<p class="mt-3 text-sm text-error">{form.message}</p>
-			{/if}
-
-			<div class="mt-5 space-y-2">
-				{#if open.reservation === 'none' && !open.receivedAt}
-					<button
-						class="pressable btn h-12 w-full rounded-2xl font-bold btn-secondary"
-						onclick={() => (confirm = { type: 'reserve', id: open.id })}
-						>{t(data.locale, 'action.reserve')}</button
-					>
-				{/if}
-				{#if open.reservation === 'mine' && !open.receivedAt}
-					<button
-						class="pressable btn h-12 w-full rounded-2xl btn-ghost"
-						onclick={() => (confirm = { type: 'unreserve', id: open.id })}
-						>{t(data.locale, 'action.unreserve')}</button
-					>
-				{/if}
-				{#if open.hiddenFromRecipient && open.createdByMe}
-					<form method="POST" action="?/deliver" use:enhance>
-						<input type="hidden" name="giftId" value={open.id} />
-						<button class="pressable btn w-full rounded-2xl btn-primary"
-							>{t(data.locale, 'gift.deliver')}</button
-						>
-					</form>
-					<form
-						method="POST"
-						action="?/withdraw"
-						use:enhance={() => {
-							const id = open.id;
-							return async ({ result }) => {
-								if (result.type !== 'success') return;
-								gifts = gifts.filter((g) => g.id !== id);
-								closeGift();
-							};
-						}}
-					>
-						<input type="hidden" name="giftId" value={open.id} />
-						<button class="pressable btn w-full rounded-2xl btn-ghost"
-							>{t(data.locale, 'gift.withdraw')}</button
-						>
-					</form>
-				{/if}
-			</div>
-
-			<div class="mt-6">
-				<h3 class="text-sm font-bold tracking-wide text-slate uppercase">
-					{t(data.locale, 'comment.add')}
-				</h3>
-				<ul class="mt-2 space-y-2">
-					{#each data.comments as comment (comment.id)}
-						<li class="rounded-2xl bg-white/80 p-3 text-sm">
-							{comment.body}
-							{#if comment.mine}
-								<form method="POST" action="?/deleteComment" use:enhance class="mt-1">
-									<input type="hidden" name="commentId" value={comment.id} />
-									<button class="text-xs font-semibold text-slate underline"
-										>{t(data.locale, 'comment.delete')}</button
-									>
-								</form>
-							{/if}
-						</li>
-					{/each}
-				</ul>
-				<form method="POST" action="?/comment" use:enhance class="mt-3 flex gap-2">
+			{#if open.hiddenFromRecipient && open.createdByMe}
+				<form method="POST" action="?/deliver" use:enhance>
 					<input type="hidden" name="giftId" value={open.id} />
-					<input
-						class="input flex-1 rounded-2xl input-sm"
-						name="body"
-						placeholder={t(data.locale, 'comment.placeholder')}
-					/>
-					<button class="pressable btn rounded-2xl btn-secondary"
-						>{t(data.locale, 'action.save')}</button
+					<button class="pressable btn w-full rounded-2xl btn-primary"
+						>{t(data.locale, 'gift.deliver')}</button
 					>
 				</form>
-			</div>
-			<button
-				type="button"
-				class="pressable btn mt-6 h-12 w-full rounded-2xl btn-ghost"
-			onclick={closeGift}>{t(data.locale, 'action.cancel')}</button
-			>
+				<form
+					method="POST"
+					action="?/withdraw"
+					use:enhance={() => {
+						const id = open.id;
+						return async ({ result }) => {
+							if (result.type !== 'success') return;
+							gifts = gifts.filter((g) => g.id !== id);
+							closeGift();
+						};
+					}}
+				>
+					<input type="hidden" name="giftId" value={open.id} />
+					<button class="pressable btn w-full rounded-2xl btn-ghost"
+						>{t(data.locale, 'gift.withdraw')}</button
+					>
+				</form>
+			{/if}
 		</div>
-	</div>
-{/if}
+
+		<div class="mt-6">
+			<h3 class="text-sm font-bold tracking-wide text-slate uppercase">
+				{t(data.locale, 'comment.add')}
+			</h3>
+			<ul class="mt-2 space-y-2">
+				{#each data.comments as comment (comment.id)}
+					<li class="rounded-2xl bg-white/80 p-3 text-sm">
+						{comment.body}
+						{#if comment.mine}
+							<form method="POST" action="?/deleteComment" use:enhance class="mt-1">
+								<input type="hidden" name="commentId" value={comment.id} />
+								<button class="text-xs font-semibold text-slate underline"
+									>{t(data.locale, 'comment.delete')}</button
+								>
+							</form>
+						{/if}
+					</li>
+				{/each}
+			</ul>
+			<form method="POST" action="?/comment" use:enhance class="mt-3 flex gap-2">
+				<input type="hidden" name="giftId" value={open.id} />
+				<input
+					class="input flex-1 rounded-2xl input-sm"
+					name="body"
+					placeholder={t(data.locale, 'comment.placeholder')}
+				/>
+				<button class="pressable btn rounded-2xl btn-secondary"
+					>{t(data.locale, 'action.save')}</button
+				>
+			</form>
+		</div>
+		<button
+			type="button"
+			class="pressable btn mt-6 h-12 w-full rounded-2xl btn-ghost"
+			onclick={closeGift}>{t(data.locale, 'action.cancel')}</button
+		>
+	{/if}
+	</BottomSheet>
+
 
 <ConfirmDialog
 	open={Boolean(confirm)}
@@ -272,10 +237,6 @@
 		fetch(`?/${type}`, { method: 'POST', body: fd, credentials: 'include' });
 	}}
 />
-
-{#if clickShield}
-	<div class="fixed inset-0 z-[80]" aria-hidden="true"></div>
-{/if}
 
 {#if data.selected}
 	<form method="POST" action="?/secret" class="hidden">
