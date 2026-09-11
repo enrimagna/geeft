@@ -24,19 +24,22 @@
 </script>
 
 {#if open}
-	<div class="fixed inset-0 z-[120] flex items-end justify-center p-4 sm:items-center">
-		<button
-			type="button"
-			class="absolute inset-0 bg-ink/35 backdrop-blur-[2px]"
-			onclick={oncancel}
-			transition:fade={{ duration: 180 }}
-			aria-label={t(locale, 'action.close')}
-		></button>
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<div
+		class="fixed inset-0 z-[200] flex items-end justify-center bg-ink/35 p-4 backdrop-blur-[2px] sm:items-center"
+		role="presentation"
+		onclick={(e) => {
+			if (e.target === e.currentTarget) oncancel();
+		}}
+		transition:fade={{ duration: 180 }}
+	>
 		<div
 			class="relative w-full max-w-sm overflow-hidden rounded-[2rem] bg-paper p-6 shadow-2xl"
 			transition:scale={{ duration: 280, start: 0.86 }}
 			role="dialog"
 			aria-modal="true"
+			onclick={(e) => e.stopPropagation()}
 		>
 			<svg class="mx-auto mb-3 h-16 w-24" viewBox="0 0 120 80" aria-hidden="true">
 				<rect x="18" y="28" width="84" height="42" rx="10" fill="#5C6B7A" />
