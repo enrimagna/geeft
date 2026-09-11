@@ -8,6 +8,8 @@
 	import { t } from '$lib/i18n/catalog';
 	import type { GiveGift } from '$lib/server/visibility';
 	import type { ActionData, PageProps } from './$types';
+	import type { Action } from 'svelte/action';
+	import { onTap } from '$lib/actions/onTap';
 
 	let { data, form }: PageProps & { form: ActionData } = $props();
 	let gifts = $state<GiveGift[]>(data.gifts);
@@ -25,6 +27,15 @@
 		if (!openId && !pendingConfirm) return;
 		return chrome.acquire();
 	});
+
+	const portal: Action<HTMLElement> = (node) => {
+		document.body.appendChild(node);
+		return {
+			destroy() {
+				node.remove();
+			}
+		};
+	};
 
 	function applyReservation(id: string, reservation: GiveGift['reservation']) {
 		gifts = gifts.map((g) => (g.id === id ? { ...g, reservation } : g));
@@ -56,55 +67,64 @@
 	}
 </script>
 
-<header class="px-5 pt-16 pr-16">
-	<p class="text-xs font-bold tracking-[0.2em] text-slate uppercase">{data.familyName}</p>
-	<h1 class="font-display text-3xl font-semibold">{t(data.locale, 'app.give')}</h1>
-</header>
+<div inert={open ? true : undefined}>
+	<header class="px-5 pt-16 pr-16">
+		<p class="text-xs font-bold tracking-[0.2em] text-slate uppercase">{data.familyName}</p>
+		<h1 class="font-display text-3xl font-semibold">{t(data.locale, 'app.give')}</h1>
+	</header>
 
-<div class="mt-4 flex flex-wrap gap-2 px-4 pb-2">
-	{#each data.lists as list (list.listId)}
-		<a
-			href={`${resolve('/give')}?list=${list.listId}`}
-			class="pressable inline-flex max-w-full shrink-0 items-center rounded-full px-3 py-1.5 text-sm font-semibold
-				{data.selected === list.listId
-				? 'bg-primary text-primary-content shadow-sm'
-				: 'bg-white/80 text-slate'}">{list.name}</a
+	<div class="mt-4 flex flex-wrap gap-2 px-4 pb-2">
+		{#each data.lists as list (list.listId)}
+			<a
+				href={`${resolve('/give')}?list=${list.listId}`}
+				class="pressable inline-flex max-w-full shrink-0 items-center rounded-full px-3 py-1.5 text-sm font-semibold
+					{data.selected === list.listId
+					? 'bg-primary text-primary-content shadow-sm'
+					: 'bg-white/80 text-slate'}">{list.name}</a
+			>
+		{/each}
+	</div>
+
+	<section class="mt-3 space-y-3 px-4">
+		{#if gifts.length === 0}
+			<EmptyState title={t(data.locale, 'empty.give')} />
+		{/if}
+		{#each gifts as gift, i (gift.id)}
+			<GiftCard {gift} index={i} locale={data.locale} mode="give" onclick={() => openGift(gift.id)} />
+		{/each}
+	</section>
+
+	{#if data.selected}
+		<button
+			class="fab-box pressable btn fixed right-4 bottom-24 z-20 h-16 w-16 rounded-3xl text-3xl shadow-xl btn-primary"
+			onclick={() => (composer = true)}
+			aria-label={t(data.locale, 'gift.addSecret')}>+</button
 		>
-	{/each}
+		<Composer
+			open={composer}
+			locale={data.locale}
+			action="?/secret"
+			secret
+			hidden={{ listId: data.selected }}
+			onclose={() => (composer = false)}
+		/>
+	{/if}
 </div>
 
-<section class="mt-3 space-y-3 px-4">
-	{#if gifts.length === 0}
-		<EmptyState title={t(data.locale, 'empty.give')} />
-	{/if}
-	{#each gifts as gift, i (gift.id)}
-		<GiftCard {gift} index={i} locale={data.locale} mode="give" onclick={() => openGift(gift.id)} />
-	{/each}
-</section>
-
-{#if data.selected}
-	<button
-		class="fab-box pressable btn fixed right-4 bottom-24 z-20 h-16 w-16 rounded-3xl text-3xl shadow-xl btn-primary"
-		onclick={() => (composer = true)}
-		aria-label={t(data.locale, 'gift.addSecret')}>+</button
-	>
-	<Composer
-		open={composer}
-		locale={data.locale}
-		action="?/secret"
-		secret
-		hidden={{ listId: data.selected }}
-		onclose={() => (composer = false)}
-	/>
-{/if}
-
 {#if open}
-	<div class="fixed inset-0 z-[80] overflow-y-auto bg-paper">
+	<div
+		use:portal
+		class="fixed inset-0 overflow-y-auto bg-paper"
+		style="z-index: 200"
+		role="dialog"
+		aria-modal="true"
+		aria-label={open.title}
+	>
 		<div class="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col px-5 pb-10 pt-4">
 			<button
 				type="button"
 				class="mx-auto mb-4 block h-1.5 w-16 rounded-full bg-mist"
-				onclick={closeGift}
+				use:onTap={closeGift}
 				aria-label={t(data.locale, 'action.close')}
 			></button>
 			{#if open.hiddenFromRecipient}
@@ -120,7 +140,7 @@
 				<button
 					type="button"
 					class="mt-3 font-semibold text-primary underline"
-					onclick={() => window.open(open.url!, '_blank', 'noopener,noreferrer')}
+					use:onTap={() => window.open(open.url!, '_blank', 'noopener,noreferrer')}
 					>{t(data.locale, 'gift.openLink')}</button
 				>
 			{/if}
@@ -136,7 +156,7 @@
 					<button
 						type="button"
 						class="pressable btn h-12 w-full rounded-2xl font-bold btn-secondary"
-						onclick={() => (pendingConfirm = { type: 'reserve', id: open.id })}
+						use:onTap={() => (pendingConfirm = { type: 'reserve', id: open.id })}
 						>{t(data.locale, 'action.reserve')}</button
 					>
 				{/if}
@@ -144,7 +164,7 @@
 					<button
 						type="button"
 						class="pressable btn h-12 w-full rounded-2xl btn-ghost"
-						onclick={() => (pendingConfirm = { type: 'unreserve', id: open.id })}
+						use:onTap={() => (pendingConfirm = { type: 'unreserve', id: open.id })}
 						>{t(data.locale, 'action.unreserve')}</button
 					>
 				{/if}
@@ -203,15 +223,20 @@
 			<button
 				type="button"
 				class="pressable btn mt-6 h-12 w-full rounded-2xl btn-ghost"
-				onclick={closeGift}>{t(data.locale, 'action.cancel')}</button
+				use:onTap={closeGift}>{t(data.locale, 'action.cancel')}</button
 			>
 		</div>
 	</div>
 {/if}
 
 {#if pendingConfirm}
-	<div class="fixed inset-0 z-[200] flex items-end justify-center bg-ink/35 p-4 sm:items-center">
-		<div class="w-full max-w-sm rounded-[2rem] bg-paper p-6 shadow-2xl">
+	<div
+		use:portal
+		class="fixed inset-0 flex items-end justify-center bg-ink/35 p-4 sm:items-center"
+		style="z-index: 300"
+		role="presentation"
+	>
+		<div class="w-full max-w-sm rounded-[2rem] bg-paper p-6 shadow-2xl" role="dialog" aria-modal="true">
 			<p class="text-center font-display text-2xl leading-tight font-semibold">
 				{pendingConfirm.type === 'unreserve'
 					? t(data.locale, 'gift.unreserve.confirm')
@@ -221,12 +246,12 @@
 				<button
 					class="pressable btn rounded-2xl btn-ghost"
 					type="button"
-					onclick={() => (pendingConfirm = null)}>{t(data.locale, 'action.cancel')}</button
+					use:onTap={() => (pendingConfirm = null)}>{t(data.locale, 'action.cancel')}</button
 				>
 				<button
 					class="pressable btn rounded-2xl font-bold btn-secondary"
 					type="button"
-					onclick={confirmPending}>{t(data.locale, 'action.confirm')}</button
+					use:onTap={confirmPending}>{t(data.locale, 'action.confirm')}</button
 				>
 			</div>
 		</div>

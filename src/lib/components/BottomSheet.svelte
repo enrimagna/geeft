@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { chrome } from '$lib/chrome.svelte';
+	import type { Action } from 'svelte/action';
 	import type { Snippet } from 'svelte';
 
 	let {
@@ -11,6 +12,15 @@
 		onclose: () => void;
 		children: Snippet;
 	} = $props();
+
+	const portal: Action<HTMLElement> = (node) => {
+		document.body.appendChild(node);
+		return {
+			destroy() {
+				node.remove();
+			}
+		};
+	};
 
 	$effect(() => {
 		if (!open) return;
@@ -27,7 +37,13 @@
 </script>
 
 {#if open}
-	<div class="fixed inset-0 z-[80] overflow-y-auto bg-paper">
+	<div
+		use:portal
+		class="fixed inset-0 overflow-y-auto bg-paper"
+		style="z-index: 200"
+		role="dialog"
+		aria-modal="true"
+	>
 		<div class="mx-auto flex min-h-dvh w-full max-w-[430px] flex-col px-5 pb-10 pt-4">
 			{@render children()}
 		</div>

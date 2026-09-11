@@ -7,6 +7,7 @@
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import GiftCard from '$lib/components/GiftCard.svelte';
 	import BottomSheet from '$lib/components/BottomSheet.svelte';
+	import { onTap } from '$lib/actions/onTap';
 	import { t } from '$lib/i18n/catalog';
 	import type { ActionData, PageProps } from './$types';
 
@@ -83,7 +84,7 @@
 		<button
 			type="button"
 			class="ribbon mb-4 block h-2 w-24 rounded-full bg-peach"
-			onclick={closeSheet}
+			use:onTap={closeSheet}
 			aria-label={t(data.locale, 'action.close')}
 		></button>
 		<h2 class="font-display text-3xl leading-tight">{open.title}</h2>
@@ -94,7 +95,7 @@
 			<button
 				type="button"
 				class="mt-3 font-semibold text-primary underline"
-				onclick={() => window.open(open.url!, '_blank', 'noopener,noreferrer')}
+				use:onTap={() => window.open(open.url!, '_blank', 'noopener,noreferrer')}
 				>{t(data.locale, 'gift.openLink')}</button
 			>
 		{/if}
@@ -109,7 +110,7 @@
 				<button
 					class="pressable btn h-12 w-full rounded-2xl btn-primary"
 					type="button"
-					onclick={() => (confirmUnreceive = open.id)}
+					use:onTap={() => (confirmUnreceive = open.id)}
 					>{t(data.locale, 'gift.unmarkReceived')}</button
 				>
 			{:else}
@@ -152,7 +153,7 @@
 			<button
 				type="button"
 				class="pressable btn h-12 w-full rounded-2xl btn-ghost"
-				onclick={closeSheet}>{t(data.locale, 'action.cancel')}</button
+				use:onTap={closeSheet}>{t(data.locale, 'action.cancel')}</button
 			>
 		</div>
 	{/if}
