@@ -17,8 +17,10 @@
 	let gifts = $state<GiveGift[]>(data.gifts);
 	let composer = $state(false);
 	let confirm = $state<{ type: 'reserve' | 'unreserve'; id: string } | null>(null);
-	/** Sheet open state is LOCAL only — never re-driven from ?gift= (that caused reopen). */
+	/** Sheet open state is LOCAL only — never re-driven from ?gift=. */
 	let openId = $state<string | null>(null);
+	/** Blocks the ghost click that hits the card under the sheet after close. */
+	let clickShield = $state(false);
 	const open = $derived(openId ? (gifts.find((g) => g.id === openId) ?? null) : null);
 
 	$effect(() => {
@@ -61,9 +63,13 @@
 	}
 
 	function closeGift() {
+		if (!openId) return;
 		openId = null;
+		clickShield = true;
+		window.setTimeout(() => {
+			clickShield = false;
+		}, 450);
 		const url = listUrl();
-		// Clear ?gift= immediately so no load can resurrect the sheet.
 		if (typeof history !== 'undefined') history.replaceState(history.state, '', url);
 		void goto(url, { replaceState: true, keepFocus: true, noScroll: true });
 	}
@@ -116,7 +122,11 @@
 		<button
 			type="button"
 			class="absolute inset-0 bg-ink/35"
-			onclick={closeGift}
+			onpointerdown={(e) => {
+				e.preventDefault();
+				e.stopPropagation();
+				closeGift();
+			}}
 			transition:fade={{ duration: 160 }}
 			aria-label={t(data.locale, 'action.close')}
 		></button>
@@ -131,7 +141,11 @@
 			<button
 				type="button"
 				class="mx-auto mb-4 block h-1.5 w-16 rounded-full bg-mist"
-				onclick={closeGift}
+				onpointerdown={(e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					closeGift();
+				}}
 				aria-label={t(data.locale, 'action.close')}
 			></button>
 			{#if open.hiddenFromRecipient}
@@ -258,6 +272,10 @@
 		fetch(`?/${type}`, { method: 'POST', body: fd, credentials: 'include' });
 	}}
 />
+
+{#if clickShield}
+	<div class="fixed inset-0 z-[80]" aria-hidden="true"></div>
+{/if}
 
 {#if data.selected}
 	<form method="POST" action="?/secret" class="hidden">
