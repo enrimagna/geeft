@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { t, type Locale } from '$lib/i18n/catalog';
+	import { swipeDismiss } from '$lib/actions/swipeDismiss';
 	import { chrome } from '$lib/chrome.svelte';
 	import { fly } from 'svelte/transition';
 
@@ -29,6 +30,7 @@
 {#if open}
 	<div class="fixed inset-0 z-50">
 		<button
+			type="button"
 			class="absolute inset-0 bg-ink/30"
 			onclick={onclose}
 			aria-label={t(locale, 'action.close')}
@@ -38,6 +40,7 @@
 			{action}
 			class="absolute inset-x-0 bottom-0 rounded-t-[2rem] bg-paper p-5 pb-8 shadow-2xl"
 			transition:fly={{ y: 80, duration: 320 }}
+			use:swipeDismiss={{ onclose }}
 			use:enhance={() => {
 				return async ({ result, update }) => {
 					if (result.type === 'success') {
@@ -52,7 +55,12 @@
 			{#each Object.entries(hidden) as [key, value] (key)}
 				<input type="hidden" name={key} {value} />
 			{/each}
-			<div class="mx-auto mb-4 h-1.5 w-16 rounded-full bg-mist"></div>
+			<button
+				type="button"
+				class="mx-auto mb-4 block h-1.5 w-16 rounded-full bg-mist"
+				onclick={onclose}
+				aria-label={t(locale, 'action.close')}
+			></button>
 			<h2 class="font-display text-2xl font-semibold">
 				{secret ? t(locale, 'gift.addSecret') : t(locale, 'gift.add')}
 			</h2>

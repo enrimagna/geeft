@@ -6,6 +6,7 @@
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import GiftCard from '$lib/components/GiftCard.svelte';
+	import { swipeDismiss } from '$lib/actions/swipeDismiss';
 	import { chrome } from '$lib/chrome.svelte';
 	import { t } from '$lib/i18n/catalog';
 	import type { GiveGift } from '$lib/server/visibility';
@@ -21,7 +22,10 @@
 
 	$effect(() => {
 		gifts = data.gifts;
-		openId = data.giftId ?? openId;
+	});
+
+	$effect(() => {
+		if (data.giftId) openId = data.giftId;
 	});
 
 	function applyReservation(id: string, reservation: GiveGift['reservation']) {
@@ -37,6 +41,16 @@
 		openId = id;
 		if (data.selected)
 			goto(resolve(`/give?list=${data.selected}&gift=${id}`), {
+				replaceState: true,
+				keepFocus: true,
+				noScroll: true
+			});
+	}
+
+	function closeGift() {
+		openId = null;
+		if (data.selected)
+			goto(resolve(`/give?list=${data.selected}`), {
 				replaceState: true,
 				keepFocus: true,
 				noScroll: true
@@ -89,15 +103,23 @@
 {#if open}
 	<div class="fixed inset-0 z-50 flex items-end">
 		<button
+			type="button"
 			class="absolute inset-0 bg-ink/35"
-			onclick={() => (openId = null)}
+			onclick={closeGift}
 			transition:fade={{ duration: 160 }}
 			aria-label={t(data.locale, 'action.close')}
 		></button>
 		<div
 			class="relative max-h-[85dvh] w-full overflow-y-auto rounded-t-[2rem] bg-paper p-5 pb-10 shadow-2xl"
 			transition:fly={{ y: 70, duration: 280 }}
+			use:swipeDismiss={{ onclose: closeGift }}
 		>
+			<button
+				type="button"
+				class="mx-auto mb-4 block h-1.5 w-16 rounded-full bg-mist"
+				onclick={closeGift}
+				aria-label={t(data.locale, 'action.close')}
+			></button>
 			{#if open.hiddenFromRecipient}
 				<p class="mb-2 text-xs font-bold tracking-widest text-peach uppercase">
 					{t(data.locale, 'gift.secret')}
@@ -151,15 +173,8 @@
 							const id = open.id;
 							return async ({ result }) => {
 								if (result.type !== 'success') return;
-								openId = null;
 								gifts = gifts.filter((g) => g.id !== id);
-								if (data.selected) {
-									await goto(resolve(`/give?list=${data.selected}`), {
-										replaceState: true,
-										keepFocus: true,
-										noScroll: true
-									});
-								}
+								closeGift();
 							};
 						}}
 					>
@@ -202,6 +217,11 @@
 					>
 				</form>
 			</div>
+			<button
+				type="button"
+				class="pressable btn mt-6 h-12 w-full rounded-2xl btn-ghost"
+			onclick={closeGift}>{t(data.locale, 'action.cancel')}</button
+			>
 		</div>
 	</div>
 {/if}

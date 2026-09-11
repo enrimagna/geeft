@@ -6,6 +6,7 @@
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
 	import EmptyState from '$lib/components/EmptyState.svelte';
 	import GiftCard from '$lib/components/GiftCard.svelte';
+	import { swipeDismiss } from '$lib/actions/swipeDismiss';
 	import { chrome } from '$lib/chrome.svelte';
 	import { t } from '$lib/i18n/catalog';
 	import { fade, fly } from 'svelte/transition';
@@ -75,6 +76,7 @@
 {#if open}
 	<div class="fixed inset-0 z-50 flex items-end">
 		<button
+			type="button"
 			class="absolute inset-0 bg-ink/35"
 			onclick={() => (openId = null)}
 			transition:fade={{ duration: 160 }}
@@ -83,8 +85,14 @@
 		<div
 			class="relative w-full rounded-t-[2rem] bg-paper p-5 pb-10 shadow-2xl"
 			transition:fly={{ y: 70, duration: 280 }}
+			use:swipeDismiss={{ onclose: () => (openId = null) }}
 		>
-			<div class="ribbon mb-4 h-2 w-24 rounded-full bg-peach"></div>
+			<button
+				type="button"
+				class="ribbon mb-4 block h-2 w-24 rounded-full bg-peach"
+				onclick={() => (openId = null)}
+				aria-label={t(data.locale, 'action.close')}
+			></button>
 			<h2 class="font-display text-3xl leading-tight">{open.title}</h2>
 			{#if open.description}
 				<p class="mt-3 text-slate">{open.description}</p>
@@ -104,6 +112,11 @@
 				<p class="mt-3 text-sm text-error">{form.message}</p>
 			{/if}
 			<div class="mt-6 grid grid-cols-2 gap-3">
+				<button
+					type="button"
+					class="pressable btn w-full rounded-2xl btn-ghost col-span-2"
+					onclick={() => (openId = null)}>{t(data.locale, 'action.cancel')}</button
+				>
 				{#if open.receivedAt}
 					<button
 						class="pressable btn w-full rounded-2xl btn-primary"
