@@ -17,7 +17,7 @@ export const load: PageServerLoad = async (event) => {
 	const user = requirePageUser(event);
 	const fam = requireCurrentFamily(db, user);
 	const lists = receiveListsFor(db, user.id, fam.id, user.firstName);
-	const selected =
+	let selected =
 		event.url.searchParams.get('list') ??
 		lists.find((l) => l.kind === 'personal')?.listId ??
 		lists[0]?.listId ??
