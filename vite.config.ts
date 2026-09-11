@@ -31,6 +31,7 @@ export default defineConfig({
 			registerType: 'autoUpdate',
 			manifest: false,
 			workbox: {
+				cleanupOutdatedCaches: true,
 				navigateFallback: null,
 				globPatterns: ['**/*.{js,css,ico,png,svg,woff2}']
 			}

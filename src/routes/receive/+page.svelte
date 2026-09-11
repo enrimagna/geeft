@@ -17,12 +17,16 @@
 	let composer = $state(false);
 	let openId = $state<string | null>(null);
 	let confirmUnreceive = $state<string | null>(null);
-	const open = $derived(gifts.find((g) => g.id === openId) ?? null);
+	const open = $derived(openId ? (gifts.find((g) => g.id === openId) ?? null) : null);
 
 	$effect(() => {
 		if (!open) return;
 		return chrome.acquire();
 	});
+
+	function closeSheet() {
+		openId = null;
+	}
 </script>
 
 <header class="px-5 pt-16 pr-16">
@@ -78,23 +82,22 @@
 		<button
 			type="button"
 			class="absolute inset-0 bg-ink/35"
-			onpointerdown={(e) => {
-				e.preventDefault();
-				openId = null;
-			}}
+			onclick={closeSheet}
 			transition:fade={{ duration: 160 }}
 			aria-label={t(data.locale, 'action.close')}
 		></button>
 		<div
 			class="relative z-10 w-full rounded-t-[2rem] bg-paper p-5 pb-10 shadow-2xl"
 			transition:fly={{ y: 70, duration: 280 }}
-			use:swipeDismiss={{ onclose: () => (openId = null) }}
+			use:swipeDismiss={{ onclose: closeSheet }}
+			role="dialog"
+			aria-modal="true"
 			onpointerdown={(e) => e.stopPropagation()}
 		>
 			<button
 				type="button"
 				class="ribbon mb-4 block h-2 w-24 rounded-full bg-peach"
-				onclick={() => (openId = null)}
+				onclick={closeSheet}
 				aria-label={t(data.locale, 'action.close')}
 			></button>
 			<h2 class="font-display text-3xl leading-tight">{open.title}</h2>
@@ -119,7 +122,7 @@
 				<button
 					type="button"
 					class="pressable btn w-full rounded-2xl btn-ghost col-span-2"
-					onclick={() => (openId = null)}>{t(data.locale, 'action.cancel')}</button
+					onclick={closeSheet}>{t(data.locale, 'action.cancel')}</button
 				>
 				{#if open.receivedAt}
 					<button

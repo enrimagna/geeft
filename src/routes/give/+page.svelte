@@ -17,22 +17,20 @@
 	let gifts = $state<GiveGift[]>(data.gifts);
 	let composer = $state(false);
 	let confirm = $state<{ type: 'reserve' | 'unreserve'; id: string } | null>(null);
-	let openId = $state<string | null>(data.giftId);
-	/** While true, ignore data.giftId so close is not undone by a stale URL/load. */
-	let ignoreGiftUrl = $state(false);
+	/** Sheet open state is LOCAL only — never re-driven from ?gift= (that caused reopen). */
+	let openId = $state<string | null>(null);
 	const open = $derived(openId ? (gifts.find((g) => g.id === openId) ?? null) : null);
 
 	$effect(() => {
 		gifts = data.gifts;
 	});
 
+	// Deep link once: open from ?gift= on first load only, never continuously sync.
+	let didHydrateGift = false;
 	$effect(() => {
-		const id = data.giftId ?? null;
-		if (ignoreGiftUrl) {
-			if (!id) ignoreGiftUrl = false;
-			return;
-		}
-		openId = id;
+		if (didHydrateGift) return;
+		didHydrateGift = true;
+		if (data.giftId) openId = data.giftId;
 	});
 
 	function applyReservation(id: string, reservation: GiveGift['reservation']) {
@@ -44,26 +42,30 @@
 		return chrome.acquire();
 	});
 
+	function listUrl(extra: Record<string, string> = {}) {
+		const params = new URLSearchParams();
+		if (data.selected) params.set('list', data.selected);
+		for (const [k, v] of Object.entries(extra)) params.set(k, v);
+		const q = params.toString();
+		return resolve(q ? `/give?${q}` : '/give');
+	}
+
 	function openGift(id: string) {
-		ignoreGiftUrl = false;
 		openId = id;
-		if (data.selected)
-			void goto(resolve(`/give?list=${data.selected}&gift=${id}`), {
-				replaceState: true,
-				keepFocus: true,
-				noScroll: true
-			});
+		// URL only loads comments; it must not own open/closed.
+		void goto(listUrl({ gift: id }), {
+			replaceState: true,
+			keepFocus: true,
+			noScroll: true
+		});
 	}
 
 	function closeGift() {
-		ignoreGiftUrl = true;
 		openId = null;
-		if (data.selected)
-			void goto(resolve(`/give?list=${data.selected}`), {
-				replaceState: true,
-				keepFocus: true,
-				noScroll: true
-			});
+		const url = listUrl();
+		// Clear ?gift= immediately so no load can resurrect the sheet.
+		if (typeof history !== 'undefined') history.replaceState(history.state, '', url);
+		void goto(url, { replaceState: true, keepFocus: true, noScroll: true });
 	}
 </script>
 
@@ -114,10 +116,7 @@
 		<button
 			type="button"
 			class="absolute inset-0 bg-ink/35"
-			onpointerdown={(e) => {
-				e.preventDefault();
-				closeGift();
-			}}
+			onclick={closeGift}
 			transition:fade={{ duration: 160 }}
 			aria-label={t(data.locale, 'action.close')}
 		></button>
@@ -125,6 +124,8 @@
 			class="relative z-10 max-h-[85dvh] w-full overflow-y-auto rounded-t-[2rem] bg-paper p-5 pb-10 shadow-2xl"
 			transition:fly={{ y: 70, duration: 280 }}
 			use:swipeDismiss={{ onclose: closeGift }}
+			role="dialog"
+			aria-modal="true"
 			onpointerdown={(e) => e.stopPropagation()}
 		>
 			<button
