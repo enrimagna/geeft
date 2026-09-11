@@ -14,24 +14,36 @@
 
 	$effect(() => {
 		if (!open) return;
-		return chrome.acquire();
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === 'Escape') onclose();
+		};
+		window.addEventListener('keydown', onKey);
+		const release = chrome.acquire();
+		return () => {
+			window.removeEventListener('keydown', onKey);
+			release();
+		};
 	});
 </script>
 
 {#if open}
-	<div class="fixed inset-0 z-50 flex items-end justify-center">
+	<div class="fixed inset-0 z-[80] flex items-end justify-center">
 		<button
 			type="button"
 			class="absolute inset-0 bg-ink/40"
-			onclick={onclose}
 			aria-label="Close"
+			onpointerdown={(e) => {
+				e.preventDefault();
+				onclose();
+			}}
 		></button>
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<div
 			class="relative z-10 flex max-h-[90dvh] w-full max-w-[430px] flex-col overflow-y-auto rounded-t-[2rem] bg-paper p-5 pb-10 shadow-2xl"
 			role="dialog"
 			aria-modal="true"
 			tabindex="-1"
-			onclick={(e) => e.stopPropagation()}
+			onpointerdown={(e) => e.stopPropagation()}
 		>
 			{@render children()}
 		</div>

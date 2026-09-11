@@ -14,7 +14,7 @@
 	let { data, form }: PageProps & { form: ActionData } = $props();
 	let gifts = $state<GiveGift[]>(data.gifts);
 	let composer = $state(false);
-	let confirm = $state<{ type: 'reserve' | 'unreserve'; id: string } | null>(null);
+	let pendingConfirm = $state<{ type: 'reserve' | 'unreserve'; id: string } | null>(null);
 	let openId = $state<string | null>(null);
 	/** Ignore card taps briefly after close (ghost click under the sheet). */
 	let closedAt = 0;
@@ -24,10 +24,11 @@
 		gifts = data.gifts;
 	});
 
-	let didHydrateGift = false;
+	/** Deep-link once; openId owns sheet visibility after that. */
+	let hydratedDeepLink = false;
 	$effect(() => {
-		if (didHydrateGift) return;
-		didHydrateGift = true;
+		if (hydratedDeepLink) return;
+		hydratedDeepLink = true;
 		if (data.giftId) openId = data.giftId;
 	});
 
@@ -43,23 +44,25 @@
 		return resolve(q ? `/give?${q}` : '/give');
 	}
 
+	/** Load comments via ?gift= without driving sheet open/close. */
+	function syncGiftQuery(id: string | null) {
+		const url = id ? listUrl({ gift: id }) : listUrl();
+		return goto(url, { replaceState: true, keepFocus: true, noScroll: true });
+	}
+
 	function openGift(id: string) {
 		if (Date.now() - closedAt < 500) return;
+		pendingConfirm = null;
 		openId = id;
-		void goto(listUrl({ gift: id }), {
-			replaceState: true,
-			keepFocus: true,
-			noScroll: true
-		});
+		void syncGiftQuery(id);
 	}
 
 	function closeGift() {
-		if (!openId) return;
+		if (!openId && !pendingConfirm) return;
 		closedAt = Date.now();
+		pendingConfirm = null;
 		openId = null;
-		const url = listUrl();
-		if (typeof history !== 'undefined') history.replaceState(history.state, '', url);
-		void goto(url, { replaceState: true, keepFocus: true, noScroll: true });
+		void syncGiftQuery(null);
 	}
 </script>
 
@@ -142,7 +145,7 @@
 				<button
 					type="button"
 					class="pressable btn h-12 w-full rounded-2xl font-bold btn-secondary"
-					onclick={() => (confirm = { type: 'reserve', id: open.id })}
+					onclick={() => (pendingConfirm = { type: 'reserve', id: open.id })}
 					>{t(data.locale, 'action.reserve')}</button
 				>
 			{/if}
@@ -150,7 +153,7 @@
 				<button
 					type="button"
 					class="pressable btn h-12 w-full rounded-2xl btn-ghost"
-					onclick={() => (confirm = { type: 'unreserve', id: open.id })}
+					onclick={() => (pendingConfirm = { type: 'unreserve', id: open.id })}
 					>{t(data.locale, 'action.unreserve')}</button
 				>
 			{/if}
@@ -231,17 +234,17 @@
 
 
 <ConfirmDialog
-	open={Boolean(confirm)}
+	open={Boolean(pendingConfirm)}
 	locale={data.locale}
-	title={confirm?.type === 'unreserve'
+	title={pendingConfirm?.type === 'unreserve'
 		? t(data.locale, 'gift.unreserve.confirm')
 		: t(data.locale, 'gift.reserve.confirm')}
-	oncancel={() => (confirm = null)}
+	oncancel={() => (pendingConfirm = null)}
 	onconfirm={() => {
-		if (!confirm) return;
-		const id = confirm.id;
-		const type = confirm.type;
-		confirm = null;
+		if (!pendingConfirm) return;
+		const id = pendingConfirm.id;
+		const type = pendingConfirm.type;
+		pendingConfirm = null;
 		applyReservation(id, type === 'reserve' ? 'mine' : 'none');
 		const fd = new FormData();
 		fd.set('giftId', id);

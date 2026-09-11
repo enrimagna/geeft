@@ -1,6 +1,6 @@
 import { fail } from '@sveltejs/kit';
 import { db } from '$lib/server/db';
-import { actionFail } from '$lib/server/errors';
+import { actionFail, AppError } from '$lib/server/errors';
 import {
 	createOwnGift,
 	deleteOwnGift,
@@ -22,7 +22,16 @@ export const load: PageServerLoad = async (event) => {
 		lists.find((l) => l.kind === 'personal')?.listId ??
 		lists[0]?.listId ??
 		null;
-	const gifts = selected ? listReceiveGifts(db, selected, user.id, fam.id) : [];
+	let gifts: ReturnType<typeof listReceiveGifts> = [];
+	if (selected) {
+		try {
+			gifts = listReceiveGifts(db, selected, user.id, fam.id);
+		} catch (error) {
+			if (!(error instanceof AppError)) throw error;
+			selected = lists[0]?.listId ?? null;
+			gifts = selected ? listReceiveGifts(db, selected, user.id, fam.id) : [];
+		}
+	}
 	return { lists, selected, gifts };
 };
 
