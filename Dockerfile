@@ -8,7 +8,8 @@ RUN npm ci
 COPY . .
 ENV DATABASE_URL=data/geeft.sqlite \
 	BETTER_AUTH_SECRET=build-placeholder-not-used \
-	ORIGIN=https://geeft.app
+	ORIGIN=https://geeft.app \
+	NODE_OPTIONS=--max-old-space-size=1536
 RUN npm run build
 
 FROM node:22-bookworm-slim AS runner
