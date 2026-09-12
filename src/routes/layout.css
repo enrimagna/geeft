@@ -285,11 +285,11 @@ body {
 }
 
 [data-vaul-drawer][data-vaul-drawer-direction='bottom'][data-vaul-drawer-visible='true'] {
-	animation: geeft-sheet-up 0.34s cubic-bezier(0.32, 0.72, 0, 1);
+	animation: geeft-sheet-up 0.5s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 [data-vaul-overlay][data-vaul-drawer-visible='true'] {
-	animation: geeft-sheet-fade 0.28s ease-out;
+	animation: geeft-sheet-fade 0.5s ease-out;
 }
 
 @media (prefers-reduced-motion: reduce) {
