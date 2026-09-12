@@ -262,3 +262,39 @@ body {
 .textarea {
 	min-height: 5.5rem;
 }
+
+/* Gift/composer sheet: light slide-up on open (vaul transition can skip on first paint). */
+@keyframes geeft-sheet-up {
+	from {
+		transform: translate3d(0, 14%, 0);
+		opacity: 0.92;
+	}
+	to {
+		transform: translate3d(0, 0, 0);
+		opacity: 1;
+	}
+}
+
+@keyframes geeft-sheet-fade {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+[data-vaul-drawer][data-vaul-drawer-direction='bottom'][data-vaul-drawer-visible='true'] {
+	animation: geeft-sheet-up 0.34s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+[data-vaul-overlay][data-vaul-drawer-visible='true'] {
+	animation: geeft-sheet-fade 0.28s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	[data-vaul-drawer][data-vaul-drawer-direction='bottom'][data-vaul-drawer-visible='true'],
+	[data-vaul-overlay][data-vaul-drawer-visible='true'] {
+		animation: none;
+	}
+}
