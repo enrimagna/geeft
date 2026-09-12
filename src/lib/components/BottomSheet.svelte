@@ -24,6 +24,7 @@
 	onOpenChange={(next) => {
 		if (!next) onclose();
 	}}
+	openFocus={() => null}
 	shouldScaleBackground={false}
 	closeThreshold={0.22}
 	direction="bottom"
