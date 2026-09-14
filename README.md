@@ -62,4 +62,17 @@ SvelteKit 2, Tailwind CSS + DaisyUI tema custom Slate/Peach, Drizzle + better-sq
 | `AGENTS.md`            | Regole non negoziabili.                     |
 | `COME_USARE.md`        | Seed, brand, test privacy in 5 passi.       |
 | `GROK_BUILD_PROMPT.md` | Prompt di rebuild.                          |
+| `AFFILIATE.md`         | Monetizzazione silenziosa / redirect.       |
 | `brand/`               | Logo, mark, icone PWA, palette.             |
+
+## Affiliate (Amazon)
+
+Silent shop redirects via `GET /r/{giftId}`. Feature flag defaults **off**.
+
+1. Set `GEEFT_ADMIN_IDS` in `.env` to your Better Auth user id(s), comma-separated.
+2. `npm run db:migrate` then `npm run db:seed` (seeds `amazon_it` / `fr` / `de` / `co_uk` disabled).
+3. Open `/admin/affiliate`, paste your Amazon Associates tag (e.g. `geeft-21`) on the matching network, enable that network.
+4. Toggle **Affiliate attivo**.
+
+Tags never leave the server (admin UI only). Non-matching URLs pass through unchanged. Do not rewrite `.com` links to `.it`.
+

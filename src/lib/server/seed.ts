@@ -3,6 +3,8 @@ import { hashPassword } from 'better-auth/crypto';
 import { createSqlite } from './db/sqlite.ts';
 import {
 	account,
+	affiliateNetwork,
+	appSettings,
 	family,
 	familyMember,
 	gift,
@@ -298,6 +300,62 @@ export async function seedDatabase(databaseUrl = process.env.DATABASE_URL ?? 'da
 			})
 			.run();
 	}
+
+	db.insert(appSettings)
+		.values({ key: 'affiliate_enabled', value: '0', updatedAt: now })
+		.onConflictDoNothing()
+		.run();
+
+	const networks = [
+		{
+			id: 'aff-amazon-it',
+			key: 'amazon_it',
+			name: 'Amazon IT',
+			priority: 10,
+			hostPatterns: JSON.stringify(['amazon.it', 'www.amazon.it', 'amzn.eu'])
+		},
+		{
+			id: 'aff-amazon-fr',
+			key: 'amazon_fr',
+			name: 'Amazon FR',
+			priority: 20,
+			hostPatterns: JSON.stringify(['amazon.fr', 'www.amazon.fr'])
+		},
+		{
+			id: 'aff-amazon-de',
+			key: 'amazon_de',
+			name: 'Amazon DE',
+			priority: 30,
+			hostPatterns: JSON.stringify(['amazon.de', 'www.amazon.de'])
+		},
+		{
+			id: 'aff-amazon-uk',
+			key: 'amazon_co_uk',
+			name: 'Amazon UK',
+			priority: 40,
+			hostPatterns: JSON.stringify(['amazon.co.uk', 'www.amazon.co.uk'])
+		}
+	];
+	for (const network of networks) {
+		db.insert(affiliateNetwork)
+			.values({
+				id: network.id,
+				key: network.key,
+				name: network.name,
+				enabled: false,
+				priority: network.priority,
+				hostPatterns: network.hostPatterns,
+				tagParam: 'tag',
+				tagValue: '',
+				extraParams: null,
+				notes: 'Seeded disabled — set tag in /admin/affiliate before enabling',
+				createdAt: now,
+				updatedAt: now
+			})
+			.onConflictDoNothing()
+			.run();
+	}
+
 
 	return db;
 }

@@ -95,6 +95,8 @@
 	<p class="px-4 pt-3 text-sm text-error">{form.message}</p>
 {/if}
 
+<p class="px-4 pt-8 text-xs leading-relaxed text-slate">{t(data.locale, 'affiliate.disclaimer')}</p>
+
 <form method="POST" action="?/logout" class="px-4 pt-10">
 	<button class="pressable btn w-full rounded-2xl btn-ghost"
 		>{t(data.locale, 'action.logout')}</button

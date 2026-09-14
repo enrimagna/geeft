@@ -297,6 +297,11 @@ const catalog = {
 		it: 'Controlla i campi.',
 		fr: 'Vérifiez les champs.',
 		en: 'Check the fields.'
+	},
+	'affiliate.disclaimer': {
+		it: 'Alcuni link ai negozi possono generare una commissione per Geeft, senza costo aggiuntivo per te.',
+		fr: 'Certains liens marchands peuvent générer une commission pour Geeft, sans frais supplémentaires pour toi.',
+		en: 'Some shop links may earn Geeft a commission, at no extra cost to you.'
 	}
 } as const;
 

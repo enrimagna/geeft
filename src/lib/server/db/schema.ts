@@ -170,3 +170,56 @@ export const giftComment = sqliteTable(
 		index('gift_comment_author_idx').on(table.authorId)
 	]
 );
+
+export const appSettings = sqliteTable('app_settings', {
+	key: text('key').primaryKey(),
+	value: text('value').notNull(),
+	updatedAt: updated()
+});
+
+export const affiliateNetwork = sqliteTable(
+	'affiliate_network',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		key: text('key').notNull().unique(),
+		name: text('name').notNull(),
+		enabled: integer('enabled', { mode: 'boolean' }).notNull().default(false),
+		priority: integer('priority').notNull().default(100),
+		hostPatterns: text('host_patterns').notNull(),
+		tagParam: text('tag_param').notNull().default('tag'),
+		tagValue: text('tag_value').notNull().default(''),
+		extraParams: text('extra_params'),
+		notes: text('notes'),
+		createdAt: ts(),
+		updatedAt: updated()
+	},
+	(table) => [
+		index('affiliate_network_priority_idx').on(table.priority),
+		index('affiliate_network_enabled_idx').on(table.enabled)
+	]
+);
+
+export const affiliateClick = sqliteTable(
+	'affiliate_click',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		giftId: text('gift_id')
+			.notNull()
+			.references(() => gift.id, { onDelete: 'cascade' }),
+		userId: text('user_id').references(() => user.id, { onDelete: 'set null' }),
+		networkId: text('network_id').references(() => affiliateNetwork.id, { onDelete: 'set null' }),
+		originalHost: text('original_host').notNull(),
+		rewritten: integer('rewritten', { mode: 'boolean' }).notNull().default(false),
+		createdAt: ts(),
+		uaHash: text('ua_hash')
+	},
+	(table) => [
+		index('affiliate_click_created_idx').on(table.createdAt),
+		index('affiliate_click_network_created_idx').on(table.networkId, table.createdAt),
+		index('affiliate_click_gift_idx').on(table.giftId)
+	]
+);

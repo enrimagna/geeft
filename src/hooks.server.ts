@@ -49,7 +49,7 @@ const handleParaglide: Handle = ({ event, resolve }) =>
 		});
 	});
 
-const protectedPrefixes = ['/receive', '/give', '/family', '/settings'];
+const protectedPrefixes = ['/receive', '/give', '/family', '/settings', '/admin'];
 
 const handleGuards: Handle = async ({ event, resolve }) => {
 	const path = event.url.pathname;
