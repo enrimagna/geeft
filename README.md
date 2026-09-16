@@ -67,12 +67,16 @@ SvelteKit 2, Tailwind CSS + DaisyUI tema custom Slate/Peach, Drizzle + better-sq
 
 ## Affiliate (Amazon)
 
-Silent shop redirects via `GET /r/{giftId}`. Feature flag defaults **off**.
+Redirect silenziosi via `GET /r/{giftId}`. Flag di default **off**.
 
-1. Set `GEEFT_ADMIN_IDS` in `.env` to your Better Auth user id(s), comma-separated.
-2. `npm run db:migrate` then `npm run db:seed` (seeds `amazon_it` / `fr` / `de` / `co_uk` disabled).
-3. Open `/admin/affiliate`, paste your Amazon Associates tag (e.g. `geeft-21`) on the matching network, enable that network.
-4. Toggle **Affiliate attivo**.
+Istruzioni complete (allowlist, seed, uso UI, controlli): **[docs/ADMIN-AFFILIATE.md](docs/ADMIN-AFFILIATE.md)**.
 
-Tags never leave the server (admin UI only). Non-matching URLs pass through unchanged. Do not rewrite `.com` links to `.it`.
+In breve:
+
+1. `GEEFT_ADMIN_IDS=<userId>` nel `.env` (id da `SELECT id, email FROM user;`), poi riavvio.
+2. `npm run db:migrate && npm run db:seed`
+3. Apri `/admin/affiliate` da account in allowlist
+4. Metti il tag Associates sulla rete, abilitala, poi **Attiva** il flag
+
+I tag restano solo server-side. URL non matchati = passthrough. Non convertire `.com` → `.it`.
 

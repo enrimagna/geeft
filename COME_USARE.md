@@ -33,3 +33,7 @@ Verifica viewport 390px, target touch 44px, bottom navigation, italiano/francese
 Dalla root dell’app esegui il package manager con gli script `install`, `check`, `lint`, `test`, `build` e `preview` definiti in package.json. Poi crea data/ e avvia lo script di seed se presente.
 
 Per sviluppo usa lo script dev e apri l’URL locale in viewport mobile 390px. Gli account seed e l’invite `familia-dev-invite` sono in SPEC.md; in ambiente reale cambia subito le password e rigenera l’invite.
+
+## 6. Admin affiliate
+
+Vedi [docs/ADMIN-AFFILIATE.md](docs/ADMIN-AFFILIATE.md): `GEEFT_ADMIN_IDS`, migrate/seed, `/admin/affiliate`, tag Amazon e toggle flag.
