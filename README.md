@@ -62,4 +62,21 @@ SvelteKit 2, Tailwind CSS + DaisyUI tema custom Slate/Peach, Drizzle + better-sq
 | `AGENTS.md`            | Regole non negoziabili.                     |
 | `COME_USARE.md`        | Seed, brand, test privacy in 5 passi.       |
 | `GROK_BUILD_PROMPT.md` | Prompt di rebuild.                          |
+| `AFFILIATE.md`         | Monetizzazione silenziosa / redirect.       |
 | `brand/`               | Logo, mark, icone PWA, palette.             |
+
+## Affiliate (Amazon)
+
+Redirect silenziosi via `GET /r/{giftId}`. Flag di default **off**.
+
+Istruzioni complete (allowlist, seed, uso UI, controlli): **[docs/ADMIN-AFFILIATE.md](docs/ADMIN-AFFILIATE.md)**.
+
+In breve:
+
+1. `GEEFT_ADMIN_IDS=<userId>` nel `.env` (id da `SELECT id, email FROM user;`), poi riavvio.
+2. `npm run db:migrate && npm run db:seed`
+3. Apri `/admin/affiliate` da account in allowlist
+4. Metti il tag Associates sulla rete, abilitala, poi **Attiva** il flag
+
+I tag restano solo server-side. URL non matchati = passthrough. Non convertire `.com` → `.it`.
+

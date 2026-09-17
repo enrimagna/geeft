@@ -89,7 +89,7 @@
 			<button
 				type="button"
 				class="mt-3 font-semibold text-primary underline"
-				use:onTap={() => window.open(open.url!, '_blank', 'noopener,noreferrer')}
+				use:onTap={() => window.open(`/r/${open.id}`, '_blank', 'noopener,noreferrer')}
 				>{t(data.locale, 'gift.openLink')}</button
 			>
 		{/if}
