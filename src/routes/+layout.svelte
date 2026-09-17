@@ -5,7 +5,6 @@
 	import ProfileButton from '$lib/components/ProfileButton.svelte';
 	import { chrome } from '$lib/chrome.svelte';
 	import { page } from '$app/state';
-	import { t } from '$lib/i18n/catalog';
 	import type { LayoutProps } from './$types';
 
 	let { data, children }: LayoutProps = $props();
@@ -40,11 +39,6 @@
 <div class="geeft-shell relative">
 	<div class="min-h-dvh {showBottomNav ? 'pb-28' : 'pb-8'}">
 		{@render children()}
-		{#if signedIn}
-			<footer class="px-5 pt-6 text-center text-[11px] leading-relaxed text-slate/80">
-				{t(data.locale, 'affiliate.disclaimer')}
-			</footer>
-		{/if}
 	</div>
 </div>
 
