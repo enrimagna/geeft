@@ -103,7 +103,11 @@
 				</label>
 				<label class="block text-sm font-semibold md:col-span-2">
 					Extra params JSON
-					<input class="input mt-1 w-full rounded-2xl input-sm" name="extraParams" placeholder="{}" />
+					<input
+						class="input mt-1 w-full rounded-2xl input-sm"
+						name="extraParams"
+						placeholder={'{}'}
+					/>
 				</label>
 				<button class="pressable btn rounded-2xl btn-primary md:col-span-2" type="submit"
 					>Crea</button
